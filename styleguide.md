@@ -21,7 +21,7 @@ Your project is likely to include multiple files, so you need to think about how
 **A readme.md file** should be included with every project. Learn to use [Markdown to format your documents](https://guides.github.com/features/mastering-markdown/).
 
 ## Variable and Function Naming
-How you name your variables, data structures, and functions can be the dominant factor on whether your code is readable. In general, we follow the [Composite]((https://github.com/gparmer/Composite/blob/master/doc/style_guide/composite_coding_style.pdf?raw=true) and [Google](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html#Naming) naming conventions, although Google's recommendations are for C++ and thus use more capital letters than you are likely to use in a C program.
+How you name your variables, data structures, and functions can be the dominant factor on whether your code is readable. In general, we follow the [Composite](https://github.com/gparmer/Composite/blob/master/doc/style_guide/composite_coding_style.pdf?raw=true) and [Google](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html#Naming) naming conventions, although Google's recommendations are for C++ and thus use more capital letters than you are likely to use in a C program.
 
 ### Understandable, Lower Case with Underscores
 Variable names should be meaningful and help users understand what they are for. Do not use CamelCase unless you are writing Java programs. In C, we prefer all lowercase function and variable names, with underscores between words where necessary. Avoid abbreviations except for very obvious cases.
