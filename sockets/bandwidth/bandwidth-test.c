@@ -23,6 +23,7 @@ int main(int argc, char ** argv)
         char* server_ip = "127.0.0.1";
         char *message = malloc(MAX_PAYLOAD_SIZE);
         int sockfd, rc;
+        int i;
         struct addrinfo hints, *server;
         int o;
         int sleep_time = 1;
@@ -54,6 +55,12 @@ int main(int argc, char ** argv)
         }
 
         printf("server_ip: %s   port: %s\n", server_ip, server_port);
+
+        /* Initialize the message with some data */
+        for(i=0; i<MAX_PAYLOAD_SIZE; i++){
+                message[i] = 'A';
+        }
+        message[MAX_PAYLOAD_SIZE - 1] = '\0';
 
         /* The hints struct is used to specify what kind of server info we are looking for */
         memset(&hints, 0, sizeof hints);
