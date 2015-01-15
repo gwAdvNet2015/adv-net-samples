@@ -5,3 +5,8 @@ server-tcp: server-tcp.c
 
 client-tcp: client-tcp.c
 	gcc client-tcp.c -o client-tcp
+
+clean:
+	@rm server-tcp
+	@rm client-tcp
+
