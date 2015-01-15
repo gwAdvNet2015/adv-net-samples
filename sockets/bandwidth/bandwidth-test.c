@@ -16,6 +16,7 @@
 ****************************************/
 
 #define MAX_PAYLOAD_SIZE 1024
+#define DEFAULT_NUM_PACKETS -1 /* Go forever */
 
 int main(int argc, char ** argv)
 {
@@ -26,13 +27,14 @@ int main(int argc, char ** argv)
         int i;
         struct addrinfo hints, *server;
         int o;
+        int num_packets = DEFAULT_NUM_PACKETS;
 
         /* Command line args:
                 -p port
                 -h host name or IP
                 -m message to send
         */
-        while ((o = getopt (argc, argv, "p:h:m:")) != -1) {
+        while ((o = getopt (argc, argv, "p:h:m:n:")) != -1) {
                 switch(o){
                 case 'p':
                         server_port = optarg;
@@ -43,6 +45,9 @@ int main(int argc, char ** argv)
                 case 'm':
                         message = optarg;
                         break;
+                case 'n':
+                        num_packets = atoi(optarg);
+                        break;
                 case '?':
                         if(optopt == 'p' || optopt == 'h' ) {
                                 fprintf (stderr, "Option %c requires an argument.\n", optopt);
@@ -52,6 +57,12 @@ int main(int argc, char ** argv)
                         }
                         break;
                 }
+        }
+
+        if(num_packets < 0){
+                printf("Sending packets forever\n");
+        }else{
+                printf("Sending %d packets", num_packets);
         }
 
         printf("server_ip: %s   port: %s\n", server_ip, server_port);
@@ -81,7 +92,7 @@ int main(int argc, char ** argv)
         sockfd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
         if (sockfd == -1) {
                 perror("ERROR opening socket");
-                exit(-1;
+                exit(-1);
         }
         rc = connect(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
@@ -92,14 +103,23 @@ int main(int argc, char ** argv)
                  */
         }
 
-        /* Loop infinitely and send messages as fast as possible */
+        /* Send messages as fast as possible
+         * Use infinite while/break to allow for infinite sending (avoid overflow with for counters)
+         */
+        i = 0;
         while(1){
                 /* Send the message, plus the \0 string ending. Use 0 flags. */
                 rc = send(sockfd, message, MAX_PAYLOAD_SIZE, 0);
-                if(rc < 0) {
+                if (rc < 0) {
                         perror("ERROR on send");
                         exit(-1);
                 }
+
+                /* Only break if we're not sending infinitely (avoid int overflow issues) */
+                if (num_packets > 0 && i == num_packets){
+                        break;
+                }
+                i++;
         }
 
         out:
