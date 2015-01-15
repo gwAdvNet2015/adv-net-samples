@@ -71,14 +71,15 @@ int main(int argc, char ** argv)
         sockfd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
         if (sockfd == -1) {
                 perror("ERROR opening socket");
-                exit(-1);
+                exit(-1;
         }
         rc = connect(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
                 perror("ERROR on connect");
-                close(sockfd);
-                exit(-1);
-                // TODO: could use goto here for error cleanup
+                goto out;
+                /* Watch out for velociraptors...
+                 * http://xkcd.com/292/
+                 */
         }
 
         while(1){
