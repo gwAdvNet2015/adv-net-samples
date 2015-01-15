@@ -57,7 +57,7 @@ int main(int argc, char ** argv)
         printf("server_ip: %s   port: %s\n", server_ip, server_port);
 
         /* Initialize the message with some data */
-        for(i=0; i<MAX_PAYLOAD_SIZE; i++){
+        for(i=strlen(message); i<MAX_PAYLOAD_SIZE; i++){
                 message[i] = 'A';
         }
         message[MAX_PAYLOAD_SIZE - 1] = '\0';
