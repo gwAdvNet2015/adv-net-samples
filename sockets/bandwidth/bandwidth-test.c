@@ -31,6 +31,7 @@ int main(int argc, char ** argv)
         /* Command line args:
                 -p port
                 -h host name or IP
+                -m message to send
         */
         while ((o = getopt (argc, argv, "p:h:m:")) != -1) {
                 switch(o){
@@ -56,7 +57,9 @@ int main(int argc, char ** argv)
 
         printf("server_ip: %s   port: %s\n", server_ip, server_port);
 
-        /* Initialize the message with some data */
+        /* Initialize the message with some data
+         * and ensure the string is terminated with \0
+         */
         for(i=strlen(message); i<MAX_PAYLOAD_SIZE; i++){
                 message[i] = 'A';
         }
@@ -90,6 +93,7 @@ int main(int argc, char ** argv)
                  */
         }
 
+        /* Loop infinitely and send messages as fast as possible */
         while(1){
                 /* Send the message, plus the \0 string ending. Use 0 flags. */
                 rc = send(sockfd, message, MAX_PAYLOAD_SIZE, 0);
