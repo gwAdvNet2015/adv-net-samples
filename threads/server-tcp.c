@@ -27,13 +27,17 @@ void
         int clientfd = *((int*)(&arg)), bytes_read;
         char message[256];
 
-        bytes_read = read(clientfd, message, sizeof message);
-        if(bytes_read < 0) {
-                perror("ERROR reading socket");
-        }
-        close(clientfd);
-        printf("Read: %s\n", message);
         printf("Thread %d becoming calculator.\n", pthread_self());
+        while(1){
+                bytes_read = read(clientfd, message, sizeof message);
+                if(bytes_read < 0) {
+                        perror("ERROR reading socket");
+                        break;
+                }
+                printf("[%d] Read: %s\n", pthread_self(), message);
+        }
+
+        close(clientfd);
         pthread_mutex_unlock(&lock);
         pthread_exit(NULL);
 }
