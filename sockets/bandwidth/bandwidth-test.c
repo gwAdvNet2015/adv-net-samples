@@ -26,7 +26,6 @@ int main(int argc, char ** argv)
         int i;
         struct addrinfo hints, *server;
         int o;
-        int sleep_time = 1;
 
         /* Command line args:
                 -p port
@@ -82,7 +81,7 @@ int main(int argc, char ** argv)
         sockfd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
         if (sockfd == -1) {
                 perror("ERROR opening socket");
-                exit(-1);
+                exit(-1;
         }
         rc = connect(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
@@ -98,10 +97,8 @@ int main(int argc, char ** argv)
                 /* Send the message, plus the \0 string ending. Use 0 flags. */
                 rc = send(sockfd, message, MAX_PAYLOAD_SIZE, 0);
                 if(rc < 0) {
-                        /* Error on sending packet. Do exponential backoff */
                         perror("ERROR on send");
-                        sleep(sleep_time);
-                        sleep_time *= 2;
+                        exit(-1);
                 }
         }
 
