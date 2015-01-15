@@ -15,7 +15,7 @@
         http://beej.us/guide/bgnet/
 ****************************************/
 
-#define MAX_PAYLOAD_SIZE 256
+#define MAX_PAYLOAD_SIZE 1024
 
 int main(int argc, char ** argv)
 {
