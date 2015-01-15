@@ -11,23 +11,32 @@
 
 /****************************************
         Author: Tim Wood
+        Co-Sub-Authors: Eric Armbrust, Neel Shah, Phil Lopreiato
         with a little help from
         http://beej.us/guide/bgnet/
 ****************************************/
 
 #define BACKLOG 10     // how many pending connections queue will hold
+
+/*
+ * Max number of concurrent threads.
+ * Don't have more than this or bad things *will* happen :c
+ */
 #define MAX_CLIENTS 512
 
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-
+/****************************************
+ * Func passed to pthread_create that handles
+ * the print off post-connection. If more threads
+ * than MAX_CLIENTS call this function, it esplodes
+ * ...don't do it. Serioudsly
+ ****************************************/
 void
 *handle_client(void *arg)
 {
-        pthread_mutex_lock(&lock);
         int clientfd = *((int*)(&arg)), bytes_read;
         char message[256];
 
-        printf("Thread %d becoming calculator.\n", pthread_self());
+        printf("Thread %08x\n returning to memory heaven.\n", pthread_self());
         while(1){
                 bytes_read = read(clientfd, message, sizeof message);
                 if(bytes_read < 0) {
@@ -38,7 +47,6 @@ void
         }
 
         close(clientfd);
-        pthread_mutex_unlock(&lock);
         pthread_exit(NULL);
 }
 
@@ -119,8 +127,15 @@ int main(int argc, char ** argv)
                 addr_size = sizeof client_addr;
                 clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size);
 
+                /* Eric: Create a thread th handle read after server accepts client socket. */
                 pthread_create(&client[i], NULL, (void *)handle_client, (void *)(intptr_t)clientfd);
-/*
+
+/******************************
+ * Moved to handle_client so as
+ * to handle multiple clients
+ * using multiple threads.
+ ******************************
+
                 bytes_read = read(clientfd, message, sizeof message);
                 if(bytes_read < 0) {
                         perror("ERROR reading socket");
