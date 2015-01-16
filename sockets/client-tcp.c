@@ -59,7 +59,7 @@ int main(int argc, char ** argv)
         /* getaddrinfo() gives us back a server address we can connect to.
            It actually gives us a linked list of addresses, but we'll just use the first.
          */
-        if (rc = getaddrinfo(server_ip, server_port, &hints, &server) != 0) {
+        if ((rc = getaddrinfo(server_ip, server_port, &hints, &server)) != 0) {
                 perror(gai_strerror(rc));
                 exit(-1);
         }
