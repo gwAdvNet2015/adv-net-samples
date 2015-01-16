@@ -9,7 +9,7 @@
 #include <string.h>
 
 /****************************************
-        Author: Tim Wood
+        Author: Tim Wood, Chenghu He
         with a little help from
         http://beej.us/guide/bgnet/
 ****************************************/
@@ -89,7 +89,7 @@ int main(int argc, char ** argv)
 
                 addr_size = sizeof client_addr;
 		
-		/* The UDP us recvfrom to receive data with out listion and accept */
+		/* The UDP uses recvfrom to receive data with out listen and accept */
 		/* Set to flag MSG_WAITALL for blocking the loop of receiving */
 		bytes_read = recvfrom(sockfd, message, sizeof message, MSG_WAITALL, (struct sockaddr *)&client_addr, &addr_size); 
                 if(bytes_read < 0) {

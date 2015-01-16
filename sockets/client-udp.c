@@ -9,11 +9,10 @@
 #include <string.h>
 
 /****************************************
-        Author: Tim Wood
+        Author: Tim Wood, Chenghu He
         with a little help from
         http://beej.us/guide/bgnet/
 
-        Modified by Chenghu He
 ****************************************/
 
 int main(int argc, char ** argv)
