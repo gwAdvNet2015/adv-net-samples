@@ -12,13 +12,15 @@
         Author: Tim Wood
         with a little help from
         http://beej.us/guide/bgnet/
+
+        Modified by Chenghu He
 ****************************************/
 
 int main(int argc, char ** argv)
 {
         char* server_port = "1234";
         char* server_ip = "127.0.0.1";
-        char *message = "Hello World";
+        char *message = "Hello World (from udp)";
         int sockfd, rc;
         struct addrinfo hints, *server;
         int o;
@@ -54,7 +56,7 @@ int main(int argc, char ** argv)
         /* The hints struct is used to specify what kind of server info we are looking for */
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_INET;
-        hints.ai_socktype = SOCK_STREAM; /* or SOCK_DGRAM */
+        hints.ai_socktype = SOCK_DGRAM; /* or SOCK_STREAM */
 
         /* getaddrinfo() gives us back a server address we can connect to.
            It actually gives us a linked list of addresses, but we'll just use the first.
@@ -70,20 +72,13 @@ int main(int argc, char ** argv)
                 perror("ERROR opening socket");
                 exit(-1);
         }
-        rc = connect(sockfd, server->ai_addr, server->ai_addrlen);
-        if (rc == -1) {
-                perror("ERROR on connect");
-                close(sockfd);
-                exit(-1);
-                // TODO: could use goto here for error cleanup
-        }
 
-        /* Send the message, plus the \0 string ending. Use 0 flags. */
-        rc = send(sockfd, message, strlen(message)+1, 0);
-        if(rc < 0) {
-                perror("ERROR on send");
-                exit(-1);
-        }
+	/* The UDP use sendto without connect */
+	rc = sendto(sockfd, message, strlen(message)+1, 0, server->ai_addr, server->ai_addrlen);
+	if(rc < 0) {
+		perror("ERROR on sendto");
+		exit(-1);
+	}
 
         out:
         freeaddrinfo(server);

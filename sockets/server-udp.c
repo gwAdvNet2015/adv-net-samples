@@ -14,32 +14,28 @@
         http://beej.us/guide/bgnet/
 ****************************************/
 
+#define BACKLOG 10     // how many pending connections queue will hold
+
+
 int main(int argc, char ** argv)
 {
         char* server_port = "1234";
-        char* server_ip = "127.0.0.1";
-        char *message = "Hello World";
         int sockfd, rc;
+        int yes=1;
         struct addrinfo hints, *server;
+        char message[256];
         int o;
 
         /* Command line args:
                 -p port
-                -h host name or IP
         */
-        while ((o = getopt (argc, argv, "p:h:m:")) != -1) {
+        while ((o = getopt (argc, argv, "p:")) != -1) {
                 switch(o){
                 case 'p':
                         server_port = optarg;
                         break;
-                case 'h':
-                        server_ip = optarg;
-                        break;
-                case 'm':
-                        message = optarg;
-                        break;
                 case '?':
-                        if(optopt == 'p' || optopt == 'h' ) {
+                        if(optopt == 'p') {
                                 fprintf (stderr, "Option %c requires an argument.\n", optopt);
                         }
                         else {
@@ -49,28 +45,35 @@ int main(int argc, char ** argv)
                 }
         }
 
-        printf("server_ip: %s   port: %s\n", server_ip, server_port);
+        printf("receiving from port: %s\n", server_port);
 
         /* The hints struct is used to specify what kind of server info we are looking for */
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_INET;
-        hints.ai_socktype = SOCK_STREAM; /* or SOCK_DGRAM */
+        hints.ai_socktype = SOCK_DGRAM; /* or SOCK_STREAM */
+        hints.ai_flags = AI_PASSIVE;
 
         /* getaddrinfo() gives us back a server address we can connect to.
+           The first parameter is NULL since we want an address on this host.
            It actually gives us a linked list of addresses, but we'll just use the first.
          */
-        if ((rc = getaddrinfo(server_ip, server_port, &hints, &server)) != 0) {
+        if ((rc = getaddrinfo(NULL, server_port, &hints, &server)) != 0) {
                 perror(gai_strerror(rc));
                 exit(-1);
         }
 
-        /* Now we can create the socket and connect */
+        /* Now we can create the socket and bind it to the local IP and port */
         sockfd = socket(server->ai_family, server->ai_socktype, server->ai_protocol);
         if (sockfd == -1) {
                 perror("ERROR opening socket");
                 exit(-1);
         }
-        rc = connect(sockfd, server->ai_addr, server->ai_addrlen);
+        /* Get rid of "Address already in use" error messages */
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+                perror("setsockopt");
+                exit(-1);
+        }
+        rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
                 perror("ERROR on connect");
                 close(sockfd);
@@ -78,11 +81,21 @@ int main(int argc, char ** argv)
                 // TODO: could use goto here for error cleanup
         }
 
-        /* Send the message, plus the \0 string ending. Use 0 flags. */
-        rc = send(sockfd, message, strlen(message)+1, 0);
-        if(rc < 0) {
-                perror("ERROR on send");
-                exit(-1);
+        /* Loop forever accepting new connections. */
+        while(1) {
+                struct sockaddr_storage client_addr;
+                socklen_t addr_size;
+                int bytes_read;
+
+                addr_size = sizeof client_addr;
+		
+		/* The UDP us recvfrom to receive data with out listion and accept */
+		/* Set to flag MSG_WAITALL for blocking the loop of receiving */
+		bytes_read = recvfrom(sockfd, message, sizeof message, MSG_WAITALL, (struct sockaddr *)&client_addr, &addr_size); 
+                if(bytes_read < 0) {
+                        perror("ERROR recvfrom");
+                }
+                printf("Read: %s\n", message);
         }
 
         out:
