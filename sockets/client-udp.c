@@ -72,12 +72,12 @@ int main(int argc, char ** argv)
                 exit(-1);
         }
 
-	/* The UDP use sendto without connect */
-	rc = sendto(sockfd, message, strlen(message)+1, 0, server->ai_addr, server->ai_addrlen);
-	if(rc < 0) {
-		perror("ERROR on sendto");
-		exit(-1);
-	}
+        /* The UDP use sendto without connect */
+        rc = sendto(sockfd, message, strlen(message)+1, 0, server->ai_addr, server->ai_addrlen);
+        if(rc < 0) {
+                perror("ERROR on sendto");
+                exit(-1);
+        }
 
         out:
         freeaddrinfo(server);

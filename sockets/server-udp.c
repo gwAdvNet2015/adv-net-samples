@@ -88,10 +88,10 @@ int main(int argc, char ** argv)
                 int bytes_read;
 
                 addr_size = sizeof client_addr;
-		
-		/* The UDP uses recvfrom to receive data with out listen and accept */
-		/* Set to flag MSG_WAITALL for blocking the loop of receiving */
-		bytes_read = recvfrom(sockfd, message, sizeof message, MSG_WAITALL, (struct sockaddr *)&client_addr, &addr_size); 
+
+                /* The UDP uses recvfrom to receive data with out listen and accept */
+                /* Set to flag MSG_WAITALL for blocking the loop of receiving */
+                bytes_read = recvfrom(sockfd, message, sizeof message, MSG_WAITALL, (struct sockaddr *)&client_addr, &addr_size); 
                 if(bytes_read < 0) {
                         perror("ERROR recvfrom");
                 }
