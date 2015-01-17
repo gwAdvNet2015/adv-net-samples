@@ -22,9 +22,6 @@
 #define DEFAULT_NUM_THREADS 1 /* Make one thread and use it */
 #define DEFAULT_OUT_TIME 1 /* Output info every second */
 
-int pkt_total;
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-
 /*
  * Struct contains arguments for the thread handler function
  */
@@ -33,6 +30,10 @@ struct arguments {
         struct addrinfo server;
         char *msg;
 };
+
+int pkt_total;
+struct arguments args;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 void*
 handle_thread_time(void *args)
@@ -54,17 +55,23 @@ handle_thread_send(void *arg)
 {
         printf("Does it get here? %d\n", pthread_self());
 
-        struct arguments args = *((struct arguments *)arg);
+        int i, sockfd, rc, num_pkts;
+        struct addrinfo server;
+        char *msg;
 
-        int i, sockfd, rc;
+        pthread_mutex_lock(&lock);
+        num_pkts = args.num_pkts;
+        server = args.server;
+        msg = args.msg;
+        pthread_mutex_unlock(&lock);
 
-        sockfd = socket(args.server.ai_family, args.server.ai_socktype, args.server.ai_protocol);
+        sockfd = socket(server.ai_family, server.ai_socktype, server.ai_protocol);
         if (sockfd == -1) {
                 perror("ERROR opening socket");
                 exit(-1);
         }
 
-        rc = connect(sockfd, args.server.ai_addr, args.server.ai_addrlen);
+        rc = connect(sockfd, server.ai_addr, server.ai_addrlen);
         if (rc == -1) {
                 perror("ERROR on connect");
                 goto thread_out;
@@ -76,7 +83,7 @@ handle_thread_send(void *arg)
         i = 0;
         while(1){
                 /* Send the message, plus the \0 string ending. Use 0 flags. */
-                rc = send(sockfd, args.msg, MAX_PAYLOAD_SIZE, 0);
+                rc = send(sockfd, msg, MAX_PAYLOAD_SIZE, 0);
                 if (rc < 0) {
                         perror("ERROR on send");
                         exit(-1);
@@ -87,14 +94,14 @@ handle_thread_send(void *arg)
                 pthread_mutex_unlock(&lock);
 
                 /* Only break if we're not sending infinitely (avoid int overflow issues) */
-                if (args.num_pkts > 0 && i == args.num_pkts){
+                if (num_pkts > 0 && i == num_pkts){
                         break;
                 }
                 i++;
         }
 
         thread_out:
-        freeaddrinfo(&args.server);
+        freeaddrinfo(&server);
         close(sockfd);
 
         pthread_exit(NULL);
@@ -109,7 +116,6 @@ int main(int argc, char ** argv)
         int i, o, j;
         int num_pkts = DEFAULT_NUM_PACKETS, num_thrds = DEFAULT_NUM_THREADS, out_time = DEFAULT_OUT_TIME;
         struct addrinfo hints, *server;
-        struct arguments args;
 
         pkt_total = 0;
 
@@ -198,7 +204,7 @@ int main(int argc, char ** argv)
         pthread_t clients[num_thrds];
 
         for (j = 0; j < num_thrds; j++) {
-                if (pthread_create(&clients[j], NULL, (void *)handle_thread_send, (void *)&args) != 0) {
+                if (pthread_create(&clients[j], NULL, (void *)handle_thread_send, NULL) != 0) {
                         perror("ERROR creating client thread");
                         exit(-1);
                 }
