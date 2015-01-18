@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
+#include <sys/stat.h>
 
 /****************************************
         Author: Tim Wood
@@ -16,6 +17,36 @@
 
 #define BACKLOG 10     // how many pending connections queue will hold
 
+/* Struct for contents of http request */
+typedef struct http_request{
+    char* method;
+    char* request;
+    char* version;
+} http_request;
+
+/* Struct to contain information for an http response */
+typedef struct http_response{
+    char* version;
+    char* response_code;
+    char* host;
+    char* content_type;
+    int len;
+    char* body;
+} http_response;
+
+http_response *http_response_alloc() {
+    http_response* response = malloc(sizeof(struct http_response));
+    response->version = "HTTP/1.1";
+    response->host = "host.name";
+    printf("response object created\n");
+    return response;
+}
+
+void http_response_free(http_response * response) {
+    free(response);
+}
+
+//char* response_creation()
 
 int main(int argc, char ** argv)
 {
@@ -24,7 +55,9 @@ int main(int argc, char ** argv)
         int yes=1;
         struct addrinfo hints, *server;
         char message[256];
-        int o;
+        char *requestmsgseg = NULL; /* Storage for current segment of the request message */
+        char* resp = NULL; /* holds the response message returned from a request */
+        int o, i;
 
         /* Command line args:
                 -p port
@@ -89,6 +122,7 @@ int main(int argc, char ** argv)
                 socklen_t addr_size;
                 int clientfd;
                 int bytes_read;
+                char * response_message = NULL; // container for the HTTP response message
 
                 addr_size = sizeof client_addr;
                 clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size);
@@ -97,8 +131,65 @@ int main(int argc, char ** argv)
                 if(bytes_read < 0) {
                         perror("ERROR reading socket");
                 }
+
+                http_request *req = malloc(sizeof(struct http_request));
+                /* Break up the request message into space delimited segments */
+                requestmsgseg = strtok(message, " ");
+                req->method = strdup(requestmsgseg);
+                requestmsgseg = strtok(NULL, " ");
+                req->request = strdup(requestmsgseg);
+                requestmsgseg = strtok(NULL, " ");
+                req->version = strdup(requestmsgseg);
+
+                /* Test the request was recorded correctly */
+                printf("Method: %s, Request: %s, Version: %s\n", req->method, req->request, req->version);
+
+                /* File exists, return contents */
+                if (access(++req->request, R_OK) != -1) {
+                    FILE * fp;
+                    struct stat st;
+                    int file_size, size;
+
+                    /* create the response object to contain response information */
+                    http_response* response = http_response_alloc();
+                    response->response_code = "200";
+
+                    /* open the file requested and move the information into the response object */
+                    fp = fopen(req->request, "r");
+                    stat(req->request, &st);
+                    size = st.st_size; // need to know the size of the object we are manipulating
+                    response->body = malloc(size);
+                    file_size = fread(response->body, 1, size, fp); //moves contents into response->body
+                    response->len = file_size;
+
+                    asprintf(&response_message, "%s %s\nHost: %s\nContent-Type: %s\nContent-Length: %d\n\n%s", response->version, response->response_code, response->host, response->content_type, response->len, response->body);
+                    rc = send(clientfd, response_message, strlen(response_message)+1, 0);
+                    if(rc <0) {
+                        perror("ERROR on send");
+                        exit(-1);
+                    }
+                    free(response);
+
+                /* File does not exist, return 404 */
+                } else {
+                    //file does not exist return 404
+                    printf("File does not exist\n");
+                    http_response * response = http_response_alloc();
+                    response->response_code = "404";
+                    response->body = "<html><head></head><body>ERROR 404: File Not Found</body></html>";
+                    response->len = strlen(response->body);
+
+                    asprintf(&response_message, "%s %s\nHost: %s\nContent-Type: %s\nContent-Length: %d\n\n%s", response->version, response->response_code, response->host, response->content_type, response->len, response->body);
+                    rc = send(clientfd, response_message, strlen(response_message)+1, 0);
+                    if(rc <0) {
+                        perror("ERROR on send");
+                        exit(-1);
+                    }
+                    free(response);
+                }
+
                 close(clientfd);
-                printf("Read: %s\n", message);
+                free (req);
         }
 
         out:
