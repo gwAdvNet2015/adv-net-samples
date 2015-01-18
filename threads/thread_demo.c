@@ -18,11 +18,12 @@ typedef struct __thread_param_t {
     pthread_t thread_id;
 } thread_param_t;
 
+/*
+ * Taken from man pages example.
+ */
 #define handle_error_en(en, msg) \
                        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
-#define handle_error(msg) \
-                       do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 /*
  * Thread Entry function.
@@ -38,7 +39,7 @@ int main(int argc, char ** argv)
 {
         int             error_code = 0;
         void*           status = 0;
-        size_t             stack_size = 2*1024*1024; /* 2MB*/
+        size_t          stack_size = 2*1024*1024; /* 2MB*/
         int             thread_count = DEFAULT_THREAD_COUNT;
         pthread_attr_t  thread_attr;
 
@@ -83,10 +84,22 @@ int main(int argc, char ** argv)
         }
 
         /*destroy the thread attribute object, as it is no longer needed. */
+        error_code = pthread_attr_destroy(&thread_attr);
+        if (0 != error_code) {
+                handle_error_en(error_code, "pthread_attr_destroy");
+        }
+        
+        /*
+         * Wait for thread to finish executing.
+         */
         error_code = pthread_join(thread_param.thread_id, &status);
         if (0 != error_code) {
-                handle_error_en(error_code, "thread_join");
+                handle_error_en(error_code, "pthread_join");
         }
+        
+        /*
+         * Printing the stack size of the worker thread.
+         */
         printf("Thread's stack size is: %d Bytes\n", stack_size);
 
         return 0;
