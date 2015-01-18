@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
+#include <sys/time.h>
 
 /****************************************
         Author: Chenghu He, Tim Wood
@@ -103,6 +104,9 @@ int client_count(char *server_ip, char *server_port, char *number_input)
         int sockfd, rc;
         struct addrinfo hints, *server;
         int number_try, counter = 1, re_counter;
+        struct timeval tval_start, tval_end;
+        long long int diff, min = -1LL, max = -1LL;
+        long double avg = 0.0L;
 
         /* Get the number from string number_input and check the result */
         number_try = atoi(number_input);
@@ -140,6 +144,10 @@ int client_count(char *server_ip, char *server_port, char *number_input)
 
         /* Send the message with a loop */
         while (counter <= number_try) {
+                /* Start of the time calculation */
+                gettimeofday(&tval_start, NULL);
+
+                /* The send and recv circle */
                 rc = send(sockfd, (char *)&counter, sizeof counter, 0);
                 if(rc < 0) {
                         perror("ERROR on send");
@@ -150,9 +158,24 @@ int client_count(char *server_ip, char *server_port, char *number_input)
                         perror("ERROR on recv");
                         exit(-1);
                 }
-                printf("number %d sent, result is %s \n", counter, (counter == re_counter)?"Equal":"NotEqual");
+
+                /* End of the time calculation */
+                gettimeofday(&tval_end, NULL);
+
+                /* Calculation */
+                diff = (tval_end.tv_sec - tval_start.tv_sec) * 1000000LL + tval_end.tv_usec - tval_end.tv_usec;
+                if (min == -1LL || diff < min) min = diff;  
+                if (max == -1LL || diff > max) max = diff;
+                avg = avg * (counter - 1) / counter + (long double)diff / counter ;
                 counter++;
         }
+
+        /* Show the result */
+        printf("Result:\n");
+        printf("        The total number of loops   : %d\n", number_try);
+        printf("        The min time of latency     : %lld us\n", min);
+        printf("        The max time of latency     : %lld us\n", max);
+        printf("        The average time of latency : %Lf us\n", avg);
 
         freeaddrinfo(server);
         close(sockfd);
