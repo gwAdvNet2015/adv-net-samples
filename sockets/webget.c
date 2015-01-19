@@ -1,4 +1,4 @@
-nclude <stdlib.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -11,16 +11,16 @@ nclude <stdlib.h>
 int main(int argc, char ** argv)
 {
 	//port used to connect to socket
-//	char* server_port = "80";
-	char * server_port = "1234";
+	char* server_port = "80";
+//	char * server_port = "1234";
 //	char* server_port= "1234";
 	//ip address of server http request will be sent to
-	//char* server_ip = "173.194.121.36";
-	char* server_ip = "127.0.0.1";
+	char* server_ip = "173.194.121.36";
+//	char* server_ip = "127.0.0.1";
 	//char* server_ip = "128.164.144.179";
 	//char * hostName = "http://www.cs.gwu.edu";
-	//char * host_name = "http://www.google.com";
-	char * host_name = "http://localhost:1234/hello.html";
+	char * host_name = "http://www.google.com";
+//	char * host_name = "http://localhost:1234/hello.html";
 	//socket int used to connect
 	int sockfd, rc;
 	//used to store formatted http request
@@ -37,7 +37,7 @@ int main(int argc, char ** argv)
                 -p port
                 -h host name or IP
         */
-        while ((o = getopt (argc, argv, "p:h:m:i:")) != -1) {
+/*        while ((o = getopt (argc, argv, "p:h:m:i:")) != -1) {
                 switch(o){
                 case 'p':
                         server_port = optarg;
@@ -61,12 +61,13 @@ int main(int argc, char ** argv)
                         break;
                 }
         }
-	
+*/	
 	//mallocs memory that will be used for http request.
 	http_format_req = (char*)malloc(sizeof(char*)*(strlen("GET / HTTP/1.1\r\r")+strlen(host_name) + strlen(message)));
 
 	//formats the http request
-	sprintf(http_format_req,"GET /%s HTTP/1.0\n\n", message);
+	//sprintf(http_format_req,"GET /%s HTTP/1.0\n\n", message);
+	sprintf(http_format_req, "GET / HTTP/1.0\n\n");
 	printf("%s\n", http_format_req);
 	/* The hints struct is used to specify what kind of server info we are looking for */
 	memset(&hints, 0, sizeof hints);
