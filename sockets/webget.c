@@ -37,19 +37,19 @@ int main(int argc, char ** argv)
                 -p port
                 -h host name or IP
         */
-/*        while ((o = getopt (argc, argv, "p:h:m:i:")) != -1) {
+        while ((o = getopt (argc, argv, "p:h:m:i:")) != -1) {
                 switch(o){
                 case 'p':
                         server_port = optarg;
                         break;
                 case 'h':
-                        host_name = optarg;
+                        server_ip = optarg;
                         break;
                 case 'm':
                         message = optarg;
                         break;
 		case 'i':
-			server_ip = optarg;
+			host_name = optarg;
 			break;
                 case '?':
                         if(optopt == 'p' || optopt == 'h' || optopt == 'i' ) {
@@ -61,7 +61,7 @@ int main(int argc, char ** argv)
                         break;
                 }
         }
-*/	
+	
 	//mallocs memory that will be used for http request.
 	http_format_req = (char*)malloc(sizeof(char*)*(strlen("GET / HTTP/1.1\r\r")+strlen(host_name) + strlen(message)));
 
