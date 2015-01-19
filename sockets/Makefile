@@ -1,4 +1,5 @@
-
+web-get: webget.c
+	gcc webget.c -o webget
 
 server-tcp: server-tcp.c
 	gcc server-tcp.c -o server-tcp
