@@ -163,7 +163,7 @@ int client_count(char *server_ip, char *server_port, char *number_input)
                 gettimeofday(&tval_end, NULL);
 
                 /* Calculation */
-                diff = (tval_end.tv_sec - tval_start.tv_sec) * 1000000LL + tval_end.tv_usec - tval_end.tv_usec;
+                diff = (tval_end.tv_sec - tval_start.tv_sec) * 1000000LL + tval_end.tv_usec - tval_start.tv_usec;
                 if (min == -1LL || diff < min) min = diff;  
                 if (max == -1LL || diff > max) max = diff;
                 avg = avg * (counter - 1) / counter + (long double)diff / counter ;
