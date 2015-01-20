@@ -13,7 +13,7 @@ struct ring
 	int pop;
 	int push;
 	int count;
-	ptr_t *items;
+	(void*) *items;
 };
 
 
