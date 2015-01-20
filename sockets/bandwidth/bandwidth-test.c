@@ -10,18 +10,23 @@
 
 /****************************************
         Author: Tim Wood
+        Author: Phil Lopreiato
         with a little help from
         http://beej.us/guide/bgnet/
 ****************************************/
+
+#define MAX_PAYLOAD_SIZE 1024
 
 int main(int argc, char ** argv)
 {
         char* server_port = "1234";
         char* server_ip = "127.0.0.1";
-        char *message = "Hello World";
+        char *message = malloc(MAX_PAYLOAD_SIZE);
         int sockfd, rc;
+        int i;
         struct addrinfo hints, *server;
         int o;
+        int sleep_time = 1;
 
         /* Command line args:
                 -p port
@@ -48,9 +53,14 @@ int main(int argc, char ** argv)
                         break;
                 }
         }
-        message = "gr8 b8 m8, r8 8/8";
 
         printf("server_ip: %s   port: %s\n", server_ip, server_port);
+
+        /* Initialize the message with some data */
+        for(i=strlen(message); i<MAX_PAYLOAD_SIZE; i++){
+                message[i] = 'A';
+        }
+        message[MAX_PAYLOAD_SIZE - 1] = '\0';
 
         /* The hints struct is used to specify what kind of server info we are looking for */
         memset(&hints, 0, sizeof hints);
@@ -74,21 +84,27 @@ int main(int argc, char ** argv)
         rc = connect(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
                 perror("ERROR on connect");
-                close(sockfd);
-                exit(-1);
-                // TODO: could use goto here for error cleanup
+                goto out;
+                /* Watch out for velociraptors...
+                 * http://xkcd.com/292/
+                 */
         }
 
-        /* Send the message, plus the \0 string ending. Use 0 flags. */
-        rc = send(sockfd, message, strlen(message)+1, 0);
-        if(rc < 0) {
-                perror("ERROR on send");
-                exit(-1);
+        while(1){
+                /* Send the message, plus the \0 string ending. Use 0 flags. */
+                rc = send(sockfd, message, MAX_PAYLOAD_SIZE, 0);
+                if(rc < 0) {
+                        /* Error on sending packet. Do exponential backoff */
+                        perror("ERROR on send");
+                        sleep(sleep_time);
+                        sleep_time *= 2;
+                }
         }
 
         out:
         freeaddrinfo(server);
         close(sockfd);
+        free(message);
 
         printf("Done.\n");
         return 0;
