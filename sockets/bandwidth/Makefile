@@ -1,4 +1,5 @@
 
+all: bandwidth-test multi-bandwidth-test
 
 bandwidth-test: bandwidth-test.c
 	gcc -g bandwidth-test.c -o bandwidth-test -lpthread

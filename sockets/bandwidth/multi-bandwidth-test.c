@@ -22,6 +22,7 @@
 #define DEFAULT_NUM_THREADS 1 /* Make one thread and use it */
 #define DEFAULT_SEND_DELAY 0 /* Lightspeed is too slow,
                                 we'll have to go right to ludicrous speed! */
+#define DEFAULT_NUM_THREADS 1 /* Make one worker thread */
 #define DEFAULT_OUT_TIME 1 /* Output info every second */
 
 /*
@@ -56,7 +57,7 @@ handle_thread_time(void *args)
 void*
 handle_thread_send(void *arg)
 {
-        printf("Does it get here? %d\n", pthread_self());
+        printf("New thread created with id %d\n", pthread_self());
 
         int i, sockfd, rc, num_pkts, delay;
         struct addrinfo server;
@@ -111,6 +112,7 @@ handle_thread_send(void *arg)
         thread_out:
         freeaddrinfo(&server);
         close(sockfd);
+        printf("[%d] Sending complete!\n", pthread_self());
 
         pthread_exit(NULL);
 }
@@ -122,7 +124,9 @@ int main(int argc, char ** argv)
         char *message = malloc(MAX_PAYLOAD_SIZE);
         int sockfd, rc;
         int i, o, j;
-        int num_pkts = DEFAULT_NUM_PACKETS, num_thrds = DEFAULT_NUM_THREADS, out_time = DEFAULT_OUT_TIME,
+        int num_pkts = DEFAULT_NUM_PACKETS,
+            num_thrds = DEFAULT_NUM_THREADS,
+            out_time = DEFAULT_OUT_TIME,
             send_delay = DEFAULT_SEND_DELAY;
         struct addrinfo hints, *server;
 
@@ -177,7 +181,7 @@ int main(int argc, char ** argv)
                 printf("Sending %d packets\n", num_pkts);
         }
 
-        printf("server_ip: %s   port: %s\n", server_ip, server_port);
+        printf("Connecting to %s:%s\n", server_ip, server_port);
 
         /* Initialize the message with some data
          * and ensure the string is terminated with \0
@@ -202,21 +206,22 @@ int main(int argc, char ** argv)
 
         /* Time to thread the needle */
 
-        // setting up arguments struct to pass info into thread function
+        /* Set up connection args so child threads know what to do */
         args.num_pkts = num_pkts;
         args.server = *(struct addrinfo *)server;
         args.msg = message;
         args.send_delay = send_delay;
 
-        // Thread just for outputting total pkts sent ever X seconds
+        /* Thread just for outputting total pkts sent ever X seconds */
         pthread_t output_time;
         if (pthread_create(&output_time, NULL, (void *)handle_thread_time, (void *)out_time) != 0) {
                 perror("ERROR creating time thread");
                 exit(-1);
         }
 
+        /* Create individual worker threads */
+        printf("Creating %d worker threads\n", num_thrds);
         pthread_t clients[num_thrds];
-
         for (j = 0; j < num_thrds; j++) {
                 if (pthread_create(&clients[j], NULL, (void *)handle_thread_send, NULL) != 0) {
                         perror("ERROR creating client thread");
@@ -224,6 +229,7 @@ int main(int argc, char ** argv)
                 }
         }
 
+        /* Now, wait for all the threads to finish. Maybe */
         for (j = 0; j < num_thrds; j++) {
                 pthread_join(clients[j], NULL);
         }
