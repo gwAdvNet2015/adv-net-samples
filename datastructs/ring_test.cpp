@@ -4,9 +4,6 @@
 a test consol to see if ringbuffer's exceptions are working fine 
 with exceeding push and pop options
 */
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -17,8 +14,6 @@ with exceeding push and pop options
 using namespace std;
 
 
-
-
 void main()
 {
 	const int buffer_size = 5;
@@ -26,11 +21,10 @@ void main()
 	int pop_size = 12;
 
 
-	ptr_t data[buffer_size];
-	ptr_t pop_data;
+	void* data[buffer_size];
+	void* pop_data;
 
 	struct ring* ring_buffer = ring_create( buffer_size );
-
 
 
 
@@ -42,13 +36,11 @@ void main()
 
 		int err = ring_push(ring_buffer, &data[i]);
 
-		
-		if ( err == 0 )
-		{
+
+		if ( err == 0 ){
 			printf("push data %d = %d \n", i, &data[i]);
 		}
-		else
-		{
+		else{
 			printf("push %d failed \n ", i);
 		}
 	}
@@ -58,18 +50,16 @@ void main()
 	{
 		pop_data = ring_pop(ring_buffer);
 
-		if(pop_data == NULL)
-		{
+		if(pop_data == NULL){
 			printf("pop %d failed \n" , i);
 		}
-		else
-		{
+		else{
 			printf("pop data %d = %d\n", i, pop_data);
 		}
 	}
-	
 
-//	enter any word and hit enter to close the promp
+
+	//	enter any word and hit enter to close the promp
 	std::cout << "enter any word and hit enter to close the promp" << std::endl ;
 	int end;
 	std::cin >> end ; 
