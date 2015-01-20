@@ -7,9 +7,15 @@
  * producer), then the push operation fails.
 */
 
-struct ring{
-        /* Fill this in */
-}
+struct ring
+{
+	int size;
+	int pop;
+	int push;
+	int count;
+	ptr_t *items;
+};
+
 
 /* Create a ring buffer with the specified size. Return the ring or NULL
    if there is not enough memory to create. */
