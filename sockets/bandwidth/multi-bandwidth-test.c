@@ -37,7 +37,9 @@ struct arguments {
 
 int pkt_total;
 struct arguments args;
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t send_lock = PTHREAD_MUTEX_INITIALIZER,
+                time_lock = PTHREAD_MUTEX_INITIALIZER;
+int time_thread_die_cond;
 
 void*
 handle_thread_time(void *args)
@@ -46,9 +48,10 @@ handle_thread_time(void *args)
 
         while (1) {
                 sleep(out_time);
-                pthread_mutex_lock(&lock);
+                pthread_mutex_lock(&time_lock);
                 printf("Number pkts sent: %d\n", pkt_total);
-                pthread_mutex_unlock(&lock);
+                if (time_thread_die_cond == 0) break;
+                pthread_mutex_unlock(&time_lock);
         }
 
         pthread_exit(NULL);
@@ -63,12 +66,12 @@ handle_thread_send(void *arg)
         struct addrinfo server;
         char *msg;
 
-        pthread_mutex_lock(&lock);
+        pthread_mutex_lock(&send_lock);
         num_pkts = args.num_pkts;
         server = args.server;
         msg = args.msg;
         delay = args.send_delay;
-        pthread_mutex_unlock(&lock);
+        pthread_mutex_unlock(&send_lock);
 
         sockfd = socket(server.ai_family, server.ai_socktype, server.ai_protocol);
         if (sockfd == -1) {
@@ -94,9 +97,9 @@ handle_thread_send(void *arg)
                         exit(-1);
                 }
 
-                pthread_mutex_lock(&lock);
+                pthread_mutex_lock(&send_lock);
                 pkt_total++;
-                pthread_mutex_unlock(&lock);
+                pthread_mutex_unlock(&send_lock);
 
                 /* Only break if we're not sending infinitely (avoid int overflow issues) */
                 if (num_pkts > 0 && i == num_pkts){
@@ -129,8 +132,10 @@ int main(int argc, char ** argv)
             out_time = DEFAULT_OUT_TIME,
             send_delay = DEFAULT_SEND_DELAY;
         struct addrinfo hints, *server;
+        pthread_t output_time;
 
         pkt_total = 0;
+        time_thread_die_cond = -1;
 
         /* Command line args:
                 -p port
@@ -175,9 +180,9 @@ int main(int argc, char ** argv)
                 }
         }
 
-        if(num_pkts < 0){
+        if (num_pkts < 0) {
                 printf("Sending packets forever\n");
-        }else{
+        } else {
                 printf("Sending %d packets\n", num_pkts);
         }
 
@@ -213,7 +218,6 @@ int main(int argc, char ** argv)
         args.send_delay = send_delay;
 
         /* Thread just for outputting total pkts sent ever X seconds */
-        pthread_t output_time;
         if (pthread_create(&output_time, NULL, (void *)handle_thread_time, (void *)out_time) != 0) {
                 perror("ERROR creating time thread");
                 exit(-1);
@@ -233,6 +237,10 @@ int main(int argc, char ** argv)
         for (j = 0; j < num_thrds; j++) {
                 pthread_join(clients[j], NULL);
         }
+
+        pthread_mutex_lock(&time_lock);
+        time_thread_die_cond = 0;
+        pthread_mutex_unlock(&time_lock);
 
         printf("Done.\n");
         return 0;
