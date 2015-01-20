@@ -1,3 +1,6 @@
+server-http: server-http.c
+	gcc server-http.c -o server-http
+
 web-get: webget.c
 	gcc webget.c -o webget
 
