@@ -113,7 +113,7 @@ handle_thread_send(void *arg)
         }
 
         thread_out:
-        freeaddrinfo(&server);
+        //freeaddrinfo(&server);
         close(sockfd);
         printf("[%d] Sending complete!\n", pthread_self());
 
@@ -242,6 +242,6 @@ int main(int argc, char ** argv)
         time_thread_die_cond = 0;
         pthread_mutex_unlock(&time_lock);
 
-        printf("Done.\n");
+        printf("Done -- sent %d packets.\n", pkt_total);
         return 0;
 }
