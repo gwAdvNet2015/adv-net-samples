@@ -7,17 +7,6 @@
 
 
 
-int ring_is_empty(struct ring *rb)
-{
-	return ( rb->pop == rb->push );
-}
-
-int ring_is_full(struct ring *rb)
-{
-	return   ( rb->pop + 1 ) % rb->size == rb->push;
-}
-
-
 
 /* Create a ring buffer with the specified size. Return the ring or NULL
 if there is not enough memory to create. */
