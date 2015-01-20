@@ -189,7 +189,7 @@ int main(int argc, char ** argv)
             printf("File does not exist\n");
             http_response * response = http_response_alloc();
             response->response_code = "404";
-            response->body = "<html><head></head><body>ERROR 404: File Not Found</body></html>";
+            response->body = "<html><head></head><body><h1 style='max-width:600px;margin:auto;margin-top:25px'>ERROR 404: File Not Found</h1></body></html>";
             response->len = strlen(response->body);
             
             asprintf(&response_message, "%s %s\nHost: %s\nContent-Type: %s\nContent-Length: %d\n\n%s", response->version, response->response_code, response->host, response->content_type, response->len, response->body);
