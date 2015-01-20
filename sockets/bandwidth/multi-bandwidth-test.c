@@ -19,6 +19,9 @@
 
 #define MAX_PAYLOAD_SIZE 1024
 #define DEFAULT_NUM_PACKETS -1 /* Go forever */
+#define DEFAULT_NUM_THREADS 1 /* Make one thread and use it */
+#define DEFAULT_SEND_DELAY 0 /* Lightspeed is too slow,
+                                we'll have to go right to ludicrous speed! */
 #define DEFAULT_NUM_THREADS 1 /* Make one worker thread */
 #define DEFAULT_OUT_TIME 1 /* Output info every second */
 
@@ -29,6 +32,7 @@ struct arguments {
         int num_pkts;
         struct addrinfo server;
         char *msg;
+        int send_delay;
 };
 
 int pkt_total;
@@ -55,7 +59,7 @@ handle_thread_send(void *arg)
 {
         printf("New thread created with id %d\n", pthread_self());
 
-        int i, sockfd, rc, num_pkts;
+        int i, sockfd, rc, num_pkts, delay;
         struct addrinfo server;
         char *msg;
 
@@ -63,6 +67,7 @@ handle_thread_send(void *arg)
         num_pkts = args.num_pkts;
         server = args.server;
         msg = args.msg;
+        delay = args.send_delay;
         pthread_mutex_unlock(&lock);
 
         sockfd = socket(server.ai_family, server.ai_socktype, server.ai_protocol);
@@ -98,6 +103,10 @@ handle_thread_send(void *arg)
                         break;
                 }
                 i++;
+
+                if (delay > 0){
+                        sleep(delay);
+                }
         }
 
         thread_out:
@@ -117,7 +126,8 @@ int main(int argc, char ** argv)
         int i, o, j;
         int num_pkts = DEFAULT_NUM_PACKETS,
             num_thrds = DEFAULT_NUM_THREADS,
-            out_time = DEFAULT_OUT_TIME;
+            out_time = DEFAULT_OUT_TIME,
+            send_delay = DEFAULT_SEND_DELAY;
         struct addrinfo hints, *server;
 
         pkt_total = 0;
@@ -128,9 +138,10 @@ int main(int argc, char ** argv)
                 -m message to send
                 -n number of packets to send
                 -t number of threads to create
+                -d seconds to wait in between packet sends
                 -x amount of seconds between output
         */
-        while ((o = getopt (argc, argv, "p:h:m:n:t:x:")) != -1) {
+        while ((o = getopt (argc, argv, "p:h:m:n:t:x:d:")) != -1) {
                 switch(o){
                 case 'p':
                         server_port = optarg;
@@ -149,6 +160,9 @@ int main(int argc, char ** argv)
                         break;
                 case 'x':
                         out_time = atoi(optarg);
+                        break;
+                case 'd':
+                        send_delay = atoi(optarg);
                         break;
                 case '?':
                         if(optopt == 'p' || optopt == 'h' ) {
@@ -196,6 +210,7 @@ int main(int argc, char ** argv)
         args.num_pkts = num_pkts;
         args.server = *(struct addrinfo *)server;
         args.msg = message;
+        args.send_delay = send_delay;
 
         /* Thread just for outputting total pkts sent ever X seconds */
         pthread_t output_time;
