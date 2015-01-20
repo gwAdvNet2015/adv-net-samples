@@ -28,8 +28,7 @@ void main()
 
 
 
-	for( int i = 0; i < push_size  ; i++)
-	{
+	for( int i = 0; i < push_size  ; i++){
 
 		data[i] = new int[1];
 		//data[i] = new char[1];
@@ -46,8 +45,7 @@ void main()
 	}
 
 
-	for( int i = 0; i < pop_size  ; i++)
-	{
+	for( int i = 0; i < pop_size  ; i++){
 		pop_data = ring_pop(ring_buffer);
 
 		if(pop_data == NULL){
