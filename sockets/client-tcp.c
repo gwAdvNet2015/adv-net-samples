@@ -18,11 +18,10 @@ int main(int argc, char ** argv)
 {
         char* server_port = "1234";
         char* server_ip = "127.0.0.1";
-        char *message = "GET /hello.html HTTP/1.1";
+        char *message = "Hello World";
         int sockfd, rc;
         struct addrinfo hints, *server;
-        int o, bytes_read;
-        char response[256];
+        int o;
 
         /* Command line args:
                 -p port
@@ -85,13 +84,6 @@ int main(int argc, char ** argv)
                 perror("ERROR on send");
                 exit(-1);
         }
-
-        bytes_read = read(sockfd, response, sizeof response);
-        if(bytes_read < 0) {
-            perror("ERROR reading socket");
-        }
-
-        printf("The response was %s\n", response);
 
         out:
         freeaddrinfo(server);
