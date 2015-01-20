@@ -113,7 +113,6 @@ handle_thread_send(void *arg)
         }
 
         thread_out:
-        //freeaddrinfo(&server);
         close(sockfd);
         printf("[%d] Sending complete!\n", pthread_self());
 
