@@ -1,4 +1,4 @@
-test : ring_test.cpp
-	g++ ring_test.cpp -o test
+test : ring_test.c
+	gcc ring_test.c -o ring_test
 clean:
-	rm test
+	rm ring_test
