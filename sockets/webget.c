@@ -18,9 +18,8 @@ int main(int argc, char ** argv)
 {
 	//port used to connect to socket
 	char* server_port = "80";
-	//ip address of server http request will be sent to
-	char* server_ip = "173.194.121.36";
-	char * host_name = "http://www.google.com";
+	//ip address or host name of server http request will be sent to
+	char* server_ip = "google.com";
 	//socket int used to connect
 	int sockfd, rc;
 	//used to store formatted http request
@@ -36,8 +35,9 @@ int main(int argc, char ** argv)
         /* Command line args:
                 -p port
                 -h host name or IP
-		-i http request
-		-m message (specific page you are requesting)
+		-m message (specific page you are requesting.  For ex, when
+		   requesting www.cs.gwu.edu/research, the message would be
+		   research.)
         */
         while ((o = getopt (argc, argv, "p:h:m:i:")) != -1) {
                 switch(o){
@@ -50,11 +50,8 @@ int main(int argc, char ** argv)
                 case 'm':
                         message = optarg;
                         break;
-		case 'i':
-			host_name = optarg;
-			break;
                 case '?':
-                        if(optopt == 'p' || optopt == 'h' || optopt == 'i' ) {
+                        if(optopt == 'p' || optopt == 'h' ) {
                                 fprintf (stderr, "Option %c requires an argument.\n", optopt);
                         }
                         else {
@@ -65,8 +62,7 @@ int main(int argc, char ** argv)
         }
 	
 	//mallocs memory that will be used for http request.
-	http_format_req = (char*)malloc(sizeof(char*)*(strlen("GET / HTTP/1.1\r\r")+strlen(host_name) + strlen(message)));
-
+	http_format_req = (char*)malloc(sizeof(char*)*(strlen("GET / HTTP/1.1\n\n") + strlen(message)));
 	//formats the http request
 	sprintf(http_format_req, "GET / HTTP/1.0\n\n");
 	printf("%s\n", http_format_req);
