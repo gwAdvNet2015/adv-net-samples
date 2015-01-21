@@ -8,6 +8,12 @@
 #include <inttypes.h>
 #include <string.h>
 
+/****************************************
+ Author: Joel Klein, Katie Stasaski, Lucas Chaufournier, Tim Wood
+ with a little help from
+ http://beej.us/guide/bgnet/
+ ****************************************/
+
 int main(int argc, char ** argv)
 {
 	//port used to connect to socket
