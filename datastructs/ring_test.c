@@ -15,7 +15,7 @@ with exceeding push and pop options
 
 int main()
 {
-	//set buffer size as 5, first push 3 elements, and then pop 2 elements, then push 6 elements, at last pop 12 leements
+	//set buffer size as 5, first push 3 elements, and then pop 2 elements, then push 6 elements, at last pop 12 elements
 	const int buffer_size = 5;
 
 	int push_size_1 = 3;
