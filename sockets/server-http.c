@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 
 /****************************************
- Author: Tim Wood
+ Author: Joel Klein, Katie Stasaski, Lucas Chaufournier, Tim Wood
  with a little help from
  http://beej.us/guide/bgnet/
  ****************************************/
@@ -18,14 +18,14 @@
 #define BACKLOG 10     // how many pending connections queue will hold
 
 /* Struct for contents of http request */
-typedef struct http_request{
+typedef struct http_request {
     char* method;
     char* request;
     char* version;
 } http_request;
 
 /* Struct to contain information for an http response */
-typedef struct http_response{
+typedef struct http_response {
     char* version;
     char* response_code;
     char* host;
@@ -34,7 +34,8 @@ typedef struct http_response{
     char* body;
 } http_response;
 
-http_response *http_response_alloc() {
+http_response *http_response_alloc()
+{
     http_response* response = malloc(sizeof(struct http_response));
     response->version = "HTTP/1.1";
     response->host = "host.name";
@@ -42,7 +43,8 @@ http_response *http_response_alloc() {
     return response;
 }
 
-void http_response_free(http_response * response) {
+void http_response_free(http_response * response)
+{
     free(response);
 }
 
