@@ -48,7 +48,6 @@ int main(int argc, char ** argv)
                         break;
                 }
         }
-        message = "gr8 b8 m8, r8 8/8";
 
         printf("server_ip: %s   port: %s\n", server_ip, server_port);
 

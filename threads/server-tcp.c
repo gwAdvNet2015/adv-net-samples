@@ -21,6 +21,11 @@
 /*
  * Max number of concurrent threads.
  * Don't have more than this or bad things *will* happen :c
+ * If more than max_clients is reached for concurrency,
+ * the server will not be able to serve all clients.
+ *
+ * FIX: add queue for unserved requests to be processed as
+ * threads become avaiable. 
  */
 #define MAX_CLIENTS 512
 
@@ -122,32 +127,20 @@ int main(int argc, char ** argv)
                 struct sockaddr_storage client_addr;
 
                 i++;
-                i = i % 1024;
+                i = i % MAX_CLIENTS;
 
                 addr_size = sizeof client_addr;
                 clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size);
 
                 /* Eric: Create a thread th handle read after server accepts client socket. */
                 pthread_create(&client[i], NULL, (void *)handle_client, (void *)(intptr_t)clientfd);
-
-/******************************
- * Moved to handle_client so as
- * to handle multiple clients
- * using multiple threads.
- ******************************
-
-                bytes_read = read(clientfd, message, sizeof message);
-                if(bytes_read < 0) {
-                        perror("ERROR reading socket");
-                }
-                close(clientfd);
-                printf("Read: %s\n", message);
-*/
         }
 
         out:
         freeaddrinfo(server);
         close(sockfd);
+
+        for(i = 0; i < MAX_CLIENTS; i++) pthread_join(client[i], NULL);
 
         printf("Done.\n");
         return 0;
