@@ -14,6 +14,8 @@
         Co-Sub-Authors: Eric Armbrust, Neel Shah, Phil Lopreiato
         with a little help from
         http://beej.us/guide/bgnet/
+        See 'man pthreads' for more info,
+        must be compiled with -lpthreads
 ****************************************/
 
 #define BACKLOG 10     // how many pending connections queue will hold
