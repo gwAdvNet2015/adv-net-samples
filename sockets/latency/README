@@ -1,0 +1,15 @@
+LatencyCount
+
+Installation
+        make 
+
+Usage
+
+Step one: run it in a server
+        ./latency-count -m server -p [port]
+
+Step two: test and get the result in a client
+        ./latency-count -m client -h [server_ip] -p [port] -n [times]
+
+Special: test in the same machine by default
+        make test

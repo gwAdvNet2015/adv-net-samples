@@ -57,7 +57,7 @@ int main(int argc, char ** argv)
            The first parameter is NULL since we want an address on this host.
            It actually gives us a linked list of addresses, but we'll just use the first.
          */
-        if (rc = getaddrinfo(NULL, server_port, &hints, &server) != 0) {
+        if ((rc = getaddrinfo(NULL, server_port, &hints, &server)) != 0) {
                 perror(gai_strerror(rc));
                 exit(-1);
         }
