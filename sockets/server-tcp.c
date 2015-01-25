@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
-
+#include <arpa/inet.h>
 /****************************************
         Author: Tim Wood
         with a little help from
@@ -57,7 +57,7 @@ int main(int argc, char ** argv)
            The first parameter is NULL since we want an address on this host.
            It actually gives us a linked list of addresses, but we'll just use the first.
          */
-        if ((rc = getaddrinfo(NULL, server_port, &hints, &server)) != 0) {
+        if (rc = getaddrinfo(NULL, server_port, &hints, &server) != 0) {
                 perror(gai_strerror(rc));
                 exit(-1);
         }
@@ -73,7 +73,7 @@ int main(int argc, char ** argv)
                 perror("setsockopt");
                 exit(-1);
         }
-        rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
+	rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
                 perror("ERROR on connect");
                 close(sockfd);
@@ -83,7 +83,8 @@ int main(int argc, char ** argv)
 
         /* Time to listen for clients.*/
         listen(sockfd, BACKLOG);
-        /* Loop forever accepting new connections. */
+        int imindex;
+	/* Loop forever accepting new connections. */
         while(1) {
                 struct sockaddr_storage client_addr;
                 socklen_t addr_size;
@@ -92,8 +93,19 @@ int main(int argc, char ** argv)
 
                 addr_size = sizeof client_addr;
                 clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size);
-
                 bytes_read = read(clientfd, message, sizeof message);
+		
+	//code modified by YANG HU
+	//	((struct sockaddr *)&client_addr)->sa_data
+		printf("client ip= ");
+		int ipaddr;
+		for(imindex=2;imindex<6;imindex++){
+			ipaddr=(int)(((struct sockaddr *)&client_addr)->sa_data[imindex]);
+			ipaddr=(ipaddr+256)%256;
+			printf("%d.",ipaddr);
+		}
+		printf("\n");
+	//end	
                 if(bytes_read < 0) {
                         perror("ERROR reading socket");
                 }

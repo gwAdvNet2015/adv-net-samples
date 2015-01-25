@@ -27,3 +27,8 @@
 *.i*86
 *.x86_64
 *.hex
+
+#Server & Client Pair
+server-tcp
+client-tcp
+tags

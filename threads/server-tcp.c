@@ -11,23 +11,40 @@
 
 /****************************************
         Author: Tim Wood
+        Co-Sub-Authors: Eric Armbrust, Neel Shah, Phil Lopreiato
         with a little help from
         http://beej.us/guide/bgnet/
+        See 'man pthreads' for more info,
+        must be compiled with -lpthreads
 ****************************************/
 
 #define BACKLOG 10     // how many pending connections queue will hold
+
+/*
+ * Max number of concurrent threads.
+ * Don't have more than this or bad things *will* happen :c
+ * If more than max_clients is reached for concurrency,
+ * the server will not be able to serve all clients.
+ *
+ * FIX: add queue for unserved requests to be processed as
+ * threads become avaiable. 
+ */
 #define MAX_CLIENTS 512
 
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-
+/****************************************
+ * Func passed to pthread_create that handles
+ * the print off post-connection. If more threads
+ * than MAX_CLIENTS call this function, it esplodes
+ * ...don't do it. Serioudsly
+ ****************************************/
 void
 *handle_client(void *arg)
 {
-        pthread_mutex_lock(&lock);
         int clientfd = *((int*)(&arg)), bytes_read;
         char message[256];
 
         printf("Thread %d becoming calculator.\n", pthread_self());
+        printf("Thread %08x\n returning to memory heaven.\n", pthread_self());
         while(1){
                 bytes_read = read(clientfd, message, sizeof message);
                 if(bytes_read < 0) {
@@ -114,25 +131,20 @@ int main(int argc, char ** argv)
                 struct sockaddr_storage client_addr;
 
                 i++;
-                i = i % 1024;
+                i = i % MAX_CLIENTS;
 
                 addr_size = sizeof client_addr;
                 clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size);
 
+                /* Eric: Create a thread th handle read after server accepts client socket. */
                 pthread_create(&client[i], NULL, (void *)handle_client, (void *)(intptr_t)clientfd);
-/*
-                bytes_read = read(clientfd, message, sizeof message);
-                if(bytes_read < 0) {
-                        perror("ERROR reading socket");
-                }
-                close(clientfd);
-                printf("Read: %s\n", message);
-*/
         }
 
         out:
         freeaddrinfo(server);
         close(sockfd);
+
+        for(i = 0; i < MAX_CLIENTS; i++) pthread_join(client[i], NULL);
 
         printf("Done.\n");
         return 0;
