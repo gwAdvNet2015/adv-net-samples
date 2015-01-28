@@ -8,6 +8,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <sys/time.h>
+#include <sys/errno.h>
 
 /****************************************
         Author: Chenghu He, Tim Wood, Anthony Korzan
@@ -16,6 +17,7 @@
 ****************************************/
 
 #define BACKLOG 10     // how many pending connections queue will hold
+#define TIMEOUT 500000// time in microseconds to wait to receive response for clients
 
 /*
         server_loop_tcp works as a server using TCP, handles requests, and sends the count numbers back
@@ -50,7 +52,7 @@ int server_loop_tcp(char *server_port)
         }
         /* Get rid of "Address already in use" error messages */
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-                perror("setsockopt");
+                perror("ERROR on setsockopt");
                 exit(-1);
         }
         rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
@@ -128,7 +130,7 @@ int server_loop_udp(char *server_port)
         }
         /* Get rid of "Address already in use" error messages */
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-                perror("setsockopt");
+                perror("ERROR on setsockopt");
                 exit(-1);
         }
         rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
@@ -178,8 +180,8 @@ int client_count_tcp(char *server_ip, char *server_port, char *number_input)
 {
         int sockfd, rc;
         struct addrinfo hints, *server;
-        int number_try, counter = 1, re_counter;
-        struct timeval tval_start, tval_end;
+        int number_try, counter = 0, re_counter, dropped = 0, successes = 0;
+        struct timeval tval_start, tval_end, sock_opts;
         long long int diff, min = -1LL, max = -1LL;
         long double avg = 0.0L;
 
@@ -209,6 +211,15 @@ int client_count_tcp(char *server_ip, char *server_port, char *number_input)
                 perror("ERROR opening socket");
                 exit(-1);
         }
+
+        /* Set a timeout option of 500 miliseconds on the socket */
+        sock_opts.tv_sec = 0;
+        sock_opts.tv_usec = TIMEOUT;
+        if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &sock_opts, sizeof(sock_opts)) < 0) {
+                perror("ERROR on setsockopt");
+                exit(-1);
+        }
+
         rc = connect(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
                 perror("ERROR on connect");
@@ -218,7 +229,7 @@ int client_count_tcp(char *server_ip, char *server_port, char *number_input)
         }
 
         /* Send the message with a loop */
-        while (counter <= number_try) {
+        while (counter < number_try) {
                 /* Start of the time calculation */
                 gettimeofday(&tval_start, NULL);
 
@@ -228,12 +239,19 @@ int client_count_tcp(char *server_ip, char *server_port, char *number_input)
                         perror("ERROR on send");
                         exit(-1);
                 }
+                /* We have just sent a message, increment the counter */
+                counter++;
 
                 rc = recv(sockfd, (char *)&re_counter, sizeof re_counter, 0);
                 if(rc < 0) {
+                        if (errno == EAGAIN) {
+                                dropped++;
+                                continue;
+                        }
                         perror("ERROR on recv");
                         exit(-1);
                 }
+                successes++;
 
                 /* End of the time calculation */
                 gettimeofday(&tval_end, NULL);
@@ -242,8 +260,7 @@ int client_count_tcp(char *server_ip, char *server_port, char *number_input)
                 diff = (tval_end.tv_sec - tval_start.tv_sec) * 1000000LL + tval_end.tv_usec - tval_start.tv_usec;
                 if (min == -1LL || diff < min) min = diff;  
                 if (max == -1LL || diff > max) max = diff;
-                avg = avg * (counter - 1) / counter + (long double)diff / counter ;
-                counter++;
+                avg = avg * (successes - 1) / successes + (long double)diff / successes ;
         }
 
         /* Show the result */
@@ -252,6 +269,7 @@ int client_count_tcp(char *server_ip, char *server_port, char *number_input)
         printf("        The min time of latency     : %lld us\n", min);
         printf("        The max time of latency     : %lld us\n", max);
         printf("        The average time of latency : %Lf us\n", avg);
+        printf("        Number of Packets Dropped   : %d\n", dropped);
 
         freeaddrinfo(server);
         close(sockfd);
@@ -265,8 +283,8 @@ int client_count_udp(char *server_ip, char *server_port, char *number_input)
 {
         int sockfd, rc;
         struct addrinfo hints, *server;
-        int number_try, counter = 1, re_counter;
-        struct timeval tval_start, tval_end;
+        int number_try, counter = 0, re_counter, dropped = 0, successes = 0;
+        struct timeval tval_start, tval_end, sock_opts;
         long long int diff, min = -1LL, max = -1LL;
         long double avg = 0.0L;
 
@@ -297,8 +315,16 @@ int client_count_udp(char *server_ip, char *server_port, char *number_input)
                 exit(-1);
         }
 
+        /* Set a timeout option of 500 miliseconds on the socket */
+        sock_opts.tv_sec = 0;
+        sock_opts.tv_usec = TIMEOUT;
+        if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &sock_opts, sizeof(sock_opts)) < 0) {
+                perror("ERROR on setsockopt");
+                exit(-1);
+        }
+
         /* Send the message with a loop */
-        while (counter <= number_try) {
+        while (counter < number_try) {
                 /* We will need to allow the server to reach us back by UDP,
                    and this is where we store the server's info connecting as a client to us. */
                 struct sockaddr_storage client_addr;
@@ -312,13 +338,22 @@ int client_count_udp(char *server_ip, char *server_port, char *number_input)
                         perror("ERROR on sendto");
                         exit(-1);
                 }
+                /* We have just sent a message, increment the counter */
+                counter++;
 
                 /* Set to flag MSG_WAITALL for blocking the loop of receiving */
                 rc = recvfrom(sockfd, (char *)&re_counter, sizeof re_counter, MSG_WAITALL, (struct sockaddr *)&client_addr, &addr_size);
+                
                 if(rc < 0) {
-                        perror("ERROR on recvfrom");
-                        exit(-1);
+                        if (errno == EAGAIN) {
+                                dropped++;
+                                continue;
+                        } else {
+                                perror("ERROR on recvfrom");
+                                exit(-1);
+                        }
                 }
+                successes++;
 
                 /* End of the time calculation */
                 gettimeofday(&tval_end, NULL);
@@ -327,8 +362,7 @@ int client_count_udp(char *server_ip, char *server_port, char *number_input)
                 diff = (tval_end.tv_sec - tval_start.tv_sec) * 1000000LL + tval_end.tv_usec - tval_start.tv_usec;
                 if (min == -1LL || diff < min) min = diff;  
                 if (max == -1LL || diff > max) max = diff;
-                avg = avg * (counter - 1) / counter + (long double)diff / counter ;
-                counter++;
+                avg = avg * (successes - 1) / successes + (long double)diff / successes ;
         }
 
         /* Show the result */
@@ -337,6 +371,7 @@ int client_count_udp(char *server_ip, char *server_port, char *number_input)
         printf("        The min time of latency     : %lld us\n", min);
         printf("        The max time of latency     : %lld us\n", max);
         printf("        The average time of latency : %Lf us\n", avg);
+        printf("        Number of Packets Dropped   : %d\n", dropped);
 
         freeaddrinfo(server);
         close(sockfd);
