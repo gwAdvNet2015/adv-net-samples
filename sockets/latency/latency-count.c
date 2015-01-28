@@ -230,6 +230,8 @@ int client_count_tcp(char *server_ip, char *server_port, char *number_input)
 
         /* Send the message with a loop */
         while (counter < number_try) {
+                /* A boolean */
+                int skip = 0;
                 /* Start of the time calculation */
                 gettimeofday(&tval_start, NULL);
 
@@ -242,15 +244,29 @@ int client_count_tcp(char *server_ip, char *server_port, char *number_input)
                 /* We have just sent a message, increment the counter */
                 counter++;
 
-                rc = recv(sockfd, (char *)&re_counter, sizeof re_counter, 0);
-                if(rc < 0) {
-                        if (errno == EAGAIN) {
-                                dropped++;
-                                continue;
+                /* We may have prematurely timed-out and our packet could be waiting for us.
+                 * We need to make sure the packet we recv is intended for this itteration and not the
+                 * previous one.  Thus, the we can simply check if the replied counter matches. */
+                do {
+                        /* Set to flag MSG_WAITALL for blocking the loop of receiving */
+                        rc = recv(sockfd, (char *)&re_counter, sizeof re_counter, 0);
+                        
+                        if(rc < 0) {
+                                /* Packet timed-out */
+                                if (errno == EAGAIN) {
+                                        skip = -1;
+                                } else {
+                                        perror("ERROR on recv");
+                                        exit(-1);
+                                }
                         }
-                        perror("ERROR on recv");
-                        exit(-1);
+                } while (re_counter != counter - 1 || skip);
+                /* A packet timed-out, skip this iteration. */
+                if (skip) {
+                        dropped++;
+                        continue;
                 }
+                /* At this point we received a correct response! */
                 successes++;
 
                 /* End of the time calculation */
@@ -325,6 +341,8 @@ int client_count_udp(char *server_ip, char *server_port, char *number_input)
 
         /* Send the message with a loop */
         while (counter < number_try) {
+                /* Boolean */
+                int skip = 0;
                 /* We will need to allow the server to reach us back by UDP,
                    and this is where we store the server's info connecting as a client to us. */
                 struct sockaddr_storage client_addr;
@@ -341,18 +359,29 @@ int client_count_udp(char *server_ip, char *server_port, char *number_input)
                 /* We have just sent a message, increment the counter */
                 counter++;
 
-                /* Set to flag MSG_WAITALL for blocking the loop of receiving */
-                rc = recvfrom(sockfd, (char *)&re_counter, sizeof re_counter, MSG_WAITALL, (struct sockaddr *)&client_addr, &addr_size);
-                
-                if(rc < 0) {
-                        if (errno == EAGAIN) {
-                                dropped++;
-                                continue;
-                        } else {
-                                perror("ERROR on recvfrom");
-                                exit(-1);
+                /* We may have prematurely timed-out and our packet could be waiting for us.
+                 * We need to make sure the packet we recv is intended for this itteration and not the
+                 * previous one.  Thus, the we can simply check if the replied counter matches. */
+                do {
+                        /* Set to flag MSG_WAITALL for blocking the loop of receiving */
+                        rc = recvfrom(sockfd, (char *)&re_counter, sizeof re_counter, MSG_WAITALL, (struct sockaddr *)&client_addr, &addr_size);
+                        
+                        if(rc < 0) {
+                                /* Packet timed-out */
+                                if (errno == EAGAIN) {
+                                        skip = -1;
+                                } else {
+                                        perror("ERROR on recvfrom");
+                                        exit(-1);
+                                }
                         }
+                } while (re_counter != counter - 1 || skip);
+                /* A packet timed-out, skip this iteration. */
+                if (skip) {
+                        dropped++;
+                        continue;
                 }
+                /* At this point we received a correct response! */
                 successes++;
 
                 /* End of the time calculation */
