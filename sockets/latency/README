@@ -1,0 +1,18 @@
+LatencyCount
+
+Installation
+        make 
+
+Usage
+
+Step one: run it in a server.  Protocol can be any cased substring of TCP/UDP.
+        ./latency-count -m server -p [port] -s [protocol]
+
+Step two: test and get the result in a client.  The Protocol has to be the same as that of the client.
+        ./latency-count -m client -h [server_ip] -p [port] -n [times] -s [protocol]
+
+Special one: test tcp in the same machine by default
+        make test_tcp
+
+Special two: test udp in the same machine by default
+	make test_udp

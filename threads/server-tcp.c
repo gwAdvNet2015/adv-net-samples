@@ -7,24 +7,63 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
-#include <arpa/inet.h>
+#include <pthread.h>
+
 /****************************************
         Author: Tim Wood
+        Co-Sub-Authors: Eric Armbrust, Neel Shah, Phil Lopreiato
         with a little help from
         http://beej.us/guide/bgnet/
+        See 'man pthreads' for more info,
+        must be compiled with -lpthreads
 ****************************************/
 
 #define BACKLOG 10     // how many pending connections queue will hold
 
+/*
+ * Max number of concurrent threads.
+ * Don't have more than this or bad things *will* happen :c
+ * If more than max_clients is reached for concurrency,
+ * the server will not be able to serve all clients.
+ *
+ * FIX: add queue for unserved requests to be processed as
+ * threads become avaiable. 
+ */
+#define MAX_CLIENTS 512
+
+/****************************************
+ * Func passed to pthread_create that handles
+ * the print off post-connection. If more threads
+ * than MAX_CLIENTS call this function, it esplodes
+ * ...don't do it. Serioudsly
+ ****************************************/
+void
+*handle_client(void *arg)
+{
+        int clientfd = *((int*)(&arg)), bytes_read;
+        char message[256];
+
+        printf("Thread %08x\n returning to memory heaven.\n", pthread_self());
+        while(1){
+                bytes_read = read(clientfd, message, sizeof message);
+                if(bytes_read < 0) {
+                        perror("ERROR reading socket");
+                        break;
+                }
+                printf("[%d] Read: %s\n", pthread_self(), message);
+        }
+
+        close(clientfd);
+        pthread_exit(NULL);
+}
 
 int main(int argc, char ** argv)
 {
-        char* server_port = "1234";
-        int sockfd, rc;
-        int yes=1;
-        struct addrinfo hints, *server;
+        int sockfd, rc, yes = 1, o, i = 0;
         char message[256];
-        int o;
+        char* server_port = "1234";
+        pthread_t client[MAX_CLIENTS];
+        struct addrinfo hints, *server;
 
         /* Command line args:
                 -p port
@@ -73,7 +112,7 @@ int main(int argc, char ** argv)
                 perror("setsockopt");
                 exit(-1);
         }
-	rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
+        rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
                 perror("ERROR on connect");
                 close(sockfd);
@@ -83,39 +122,27 @@ int main(int argc, char ** argv)
 
         /* Time to listen for clients.*/
         listen(sockfd, BACKLOG);
-        int imindex;
-	/* Loop forever accepting new connections. */
+        /* Loop forever accepting new connections. */
         while(1) {
-                struct sockaddr_storage client_addr;
-                socklen_t addr_size;
                 int clientfd;
-                int bytes_read;
+                socklen_t addr_size;
+                struct sockaddr_storage client_addr;
+
+                i++;
+                i = i % MAX_CLIENTS;
 
                 addr_size = sizeof client_addr;
                 clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size);
-                bytes_read = read(clientfd, message, sizeof message);
-		
-	//code modified by YANG HU
-	//	((struct sockaddr *)&client_addr)->sa_data
-		printf("client ip= ");
-		int ipaddr;
-		for(imindex=2;imindex<6;imindex++){
-			ipaddr=(int)(((struct sockaddr *)&client_addr)->sa_data[imindex]);
-			ipaddr=(ipaddr+256)%256;
-			printf("%d.",ipaddr);
-		}
-		printf("\n");
-	//end	
-                if(bytes_read < 0) {
-                        perror("ERROR reading socket");
-                }
-                close(clientfd);
-                printf("Read: %s\n", message);
+
+                /* Eric: Create a thread th handle read after server accepts client socket. */
+                pthread_create(&client[i], NULL, (void *)handle_client, (void *)(intptr_t)clientfd);
         }
 
         out:
         freeaddrinfo(server);
         close(sockfd);
+
+        for(i = 0; i < MAX_CLIENTS; i++) pthread_join(client[i], NULL);
 
         printf("Done.\n");
         return 0;

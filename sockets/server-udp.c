@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
-#include <arpa/inet.h>
+
 /****************************************
-        Author: Tim Wood
+        Author: Tim Wood, Chenghu He
         with a little help from
         http://beej.us/guide/bgnet/
 ****************************************/
@@ -45,19 +45,19 @@ int main(int argc, char ** argv)
                 }
         }
 
-        printf("listening on port: %s\n", server_port);
+        printf("receiving from port: %s\n", server_port);
 
         /* The hints struct is used to specify what kind of server info we are looking for */
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_INET;
-        hints.ai_socktype = SOCK_STREAM; /* or SOCK_DGRAM */
+        hints.ai_socktype = SOCK_DGRAM; /* or SOCK_STREAM */
         hints.ai_flags = AI_PASSIVE;
 
         /* getaddrinfo() gives us back a server address we can connect to.
            The first parameter is NULL since we want an address on this host.
            It actually gives us a linked list of addresses, but we'll just use the first.
          */
-        if (rc = getaddrinfo(NULL, server_port, &hints, &server) != 0) {
+        if ((rc = getaddrinfo(NULL, server_port, &hints, &server)) != 0) {
                 perror(gai_strerror(rc));
                 exit(-1);
         }
@@ -73,7 +73,7 @@ int main(int argc, char ** argv)
                 perror("setsockopt");
                 exit(-1);
         }
-	rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
+        rc = bind(sockfd, server->ai_addr, server->ai_addrlen);
         if (rc == -1) {
                 perror("ERROR on connect");
                 close(sockfd);
@@ -81,35 +81,20 @@ int main(int argc, char ** argv)
                 // TODO: could use goto here for error cleanup
         }
 
-        /* Time to listen for clients.*/
-        listen(sockfd, BACKLOG);
-        int imindex;
-	/* Loop forever accepting new connections. */
+        /* Loop forever accepting new connections. */
         while(1) {
                 struct sockaddr_storage client_addr;
                 socklen_t addr_size;
-                int clientfd;
                 int bytes_read;
 
                 addr_size = sizeof client_addr;
-                clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size);
-                bytes_read = read(clientfd, message, sizeof message);
-		
-	//code modified by YANG HU
-	//	((struct sockaddr *)&client_addr)->sa_data
-		printf("client ip= ");
-		int ipaddr;
-		for(imindex=2;imindex<6;imindex++){
-			ipaddr=(int)(((struct sockaddr *)&client_addr)->sa_data[imindex]);
-			ipaddr=(ipaddr+256)%256;
-			printf("%d.",ipaddr);
-		}
-		printf("\n");
-	//end	
+
+                /* The UDP uses recvfrom to receive data with out listen and accept */
+                /* Set to flag MSG_WAITALL for blocking the loop of receiving */
+                bytes_read = recvfrom(sockfd, message, sizeof message, MSG_WAITALL, (struct sockaddr *)&client_addr, &addr_size); 
                 if(bytes_read < 0) {
-                        perror("ERROR reading socket");
+                        perror("ERROR recvfrom");
                 }
-                close(clientfd);
                 printf("Read: %s\n", message);
         }
 
