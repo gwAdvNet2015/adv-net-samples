@@ -1,8 +1,18 @@
+CC = gcc
+CFLAGS = -g
+DEPS = 
+LDFLAGS = -lpthread
+
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 all: bandwidth-test multi-bandwidth-test
 
 bandwidth-test: bandwidth-test.c
-	gcc -g bandwidth-test.c -o bandwidth-test -lpthread
+	$(CC) $(CFLAGS) -o $@ $^
 
 multi-bandwidth-test: multi-bandwidth-test.c
-	gcc -g multi-bandwidth-test.c -o multi-bandwidth-test -lpthread
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+clean:
+	@rm -f bandwidth-test multi-bandwidth-test

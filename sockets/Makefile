@@ -1,21 +1,37 @@
-server-http: server-http.c
-	gcc server-http.c -o server-http
+CC = gcc
+CFLAGS = 
+DEPS = 
+LDFLAGS = 
+OBJS = server-http.c webget.c server-tcp.c client-tcp.c server-udp.c \
+		client-udp.c
+EXES = $(OBJS:.c=)
 
-web-get: webget.c
-	gcc webget.c -o webget
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-server-tcp: server-tcp.c
-	gcc server-tcp.c -o server-tcp
+all: $(EXES)
 
-client-tcp: client-tcp.c
-	gcc client-tcp.c -o client-tcp
+$(EXES):
+	$(CC) $(CFLAGS) -o $@ $@.c
 
-server-udp: server-udp.c
-	gcc server-udp.c -o server-udp
+# server-http: server-http.c
+# 	$(CC) $(CFLAGS) -o $@ $<
 
-client-udp: client-udp.c
-	gcc client-udp.c -o client-udp
+# web-get: webget.c
+# 	$(CC) $(CFLAGS) -o $@ $<
+
+# server-tcp: server-tcp.c
+# 	$(CC) $(CFLAGS) -o $@ $<
+
+# client-tcp: client-tcp.c
+# 	$(CC) $(CFLAGS) -o $@ $<
+
+# server-udp: server-udp.c
+# 	$(CC) $(CFLAGS) -o $@ $<
+
+# client-udp: client-udp.c
+# 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	@rm server-tcp client-tcp server-udp client-udp
+	@rm -f $(EXES)
 
