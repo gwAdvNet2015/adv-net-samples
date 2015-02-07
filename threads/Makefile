@@ -1,12 +1,22 @@
-CC=gcc
+CC = gcc
+CFLAGS = 
+DEPS = 
+LDFLAGS = -lpthread
+OBJS = thread_demo server-tcp client-tcp
+
+%.o: %.c $(DEPS)
+	@$(CC) $(CFLAGS) -c -o $@ $<
+
+all: $(OBJS)
 
 thread_demo: thread_demo.c
-	cc -pthread thread_demo.c -o thread_demo
-clean:
-	@rm -rf thread_demo
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 server-tcp: server-tcp.c
-	cc -lpthread server-tcp.c -o server-tcp
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 client-tcp: client-tcp.c
-	cc client-tcp.c -o client-tcp
+	$(CC) $(CFLAGS) -o $@ $^ 
+
+clean:
+	@rm -f $(OBJS)
