@@ -10,6 +10,72 @@
 #include <pcap.h> //This is the important library
 #include "simple_sniff2.h"
 
+
+
+/*
+ * Handle packets. This is our callback
+ */
+void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
+{
+    /*this counts the number of packets*/
+    static int count = 1;
+    
+    /*declares pointers to packet headers */
+    const struct sniff_ethernet *ethernet;  /*The ethernet header*/
+    const struct sniff_ip *ip;              /*The IP header */
+    const struct sniff_tcp *tcp;            /*The TCP header*/
+    const char *payload;                    /*Packet payload*/
+
+    int size_ip;
+    int size_tcp;
+    int size_payload;
+
+    printf("\nPacket number %d:\n ",count);
+    count++;
+
+    /*defines ethernet header */
+    ethernet = (struct sniff_ethernet*)(packet);
+
+    /*define /compute ip header offset*/
+    ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
+    size_ip = IP_HL(ip)*4;
+    if(size_ip<20){
+        printf("     * Invalid IP header length: %u bytes\n",size_ip);
+        return;
+    }
+
+    /*Print source and dest ip addresses*/
+    printf("\tFrom: %s\n",inet_ntoa(ip->ip_src));
+    printf("\tTo: %s\n",inet_ntoa(ip->ip_dst));
+    /*determine the protocol of packet */
+    if(ip->ip_p != IPPROTO_TCP)
+    {
+        printf("Protocol is not IP\n");
+        return;
+    }
+    
+    /*determine tcp header */
+    tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
+    size_tcp = TH_OFF(tcp)*4;
+    if(size_tcp < 20)
+    {
+        printf("    *Invalid TCP header length: %u bytes\n",size_tcp);
+        return;
+    }
+
+    printf("\tSrc port: %d\n",ntohs(tcp->th_sport));
+    printf("\tDst port: %d\n",ntohs(tcp->th_dport));
+    printf("\tSeq Num: %u\n\tACK Num: %u\n",ntohl(tcp->th_seq),ntohl(tcp->th_ack));
+    printf("\tWindow: %d\n",ntohs(tcp->th_win));
+
+
+}
+
+
+
+
+
+
 int main(int argc,char *argv[])
 {
 
@@ -37,6 +103,8 @@ int main(int argc,char *argv[])
     /*The actual packet we receive*/
     const u_char *packet;
 
+    /* The number of packets to be captured*/
+    int num_packets = 15;
 
     /*If no device is listed, send an error message*/
     if(dev == NULL){ 
@@ -46,7 +114,17 @@ int main(int argc,char *argv[])
 
     /*Print the error message*/
     printf("Device: %s\n",dev);
-    
+   
+
+    /*Retrieve network mask and number from capture device*/
+    if(pcap_lookupnet(dev,&net, &mask,errbuf) == -1){
+        fprintf(stderr,"Couldn't get netmask for device %s: %s\n",dev,errbuf);
+        net = 0;
+        mask =0;
+    }
+
+
+
     /*opens the device to read on. Errors out if failure*/
     handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
     if(handle == NULL){
@@ -67,14 +145,20 @@ int main(int argc,char *argv[])
         return 2;
     }
 
-    /*Grab a packet */
-    packet = pcap_next(handle,&header);
-    
+    /*Grab a single packet */
+   // packet = pcap_next(handle,&header);
     /*Print its length */
-    printf("Jacked a packet with length of [%d]\n",header.len);
+    //printf("Jacked a packet with length of [%d]\n",header.len);
+
+
+    /*Set up our callback function*/
+    pcap_loop(handle,num_packets,got_packet,NULL);
+
 
     /*Close the session*/
+    pcap_freecode(&fp);
     pcap_close(handle);
 
+    printf("\nFinished capturing packet\n");
     return 0;
 }
