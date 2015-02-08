@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <pcap.h> //This is the important library
 #include "simple_sniff2.h"
-
-
+#include <stdlib.h>
+#include <unistd.h>
 
 /*
  * Handle packets. This is our callback
@@ -80,7 +80,7 @@ int main(int argc,char *argv[])
 {
 
     /*This is the device to sniff on and the error string*/
-    char *dev = "eth0", errbuf[PCAP_ERRBUF_SIZE];
+    char *dev, errbuf[PCAP_ERRBUF_SIZE];
 
     /*This the session handler*/
     pcap_t *handle;
@@ -89,7 +89,8 @@ int main(int argc,char *argv[])
     struct bpf_program fp;
 
     /*The filter expression*/
-    char filter_exp[] = "port 80";
+    //char filter_exp[] = "port 80";
+    char* filter_exp;
 
     /*The netmask of our sniffing device*/
     bpf_u_int32 mask;
@@ -106,13 +107,65 @@ int main(int argc,char *argv[])
     /* The number of packets to be captured*/
     int num_packets = 15;
 
+    int o; /*Arguments */
+    char *help = "Unknown Argument:\n"
+                 "Arguments:\n "
+                 "\t-i  interface to listen on Ex. eth0\n"
+                 "\t-e  expression to filter on. EX. \"port 80\"\n"
+                 "\t-n  number of packets to listen for Ex. 15\n";
+    /* Command line args:
+     -p port
+     */
+    while ((o = getopt (argc, argv, "i:p:e:")) != -1) {
+        switch(o){
+            case 'i':
+                dev = optarg;
+                break;
+            case 'n':
+                num_packets = atoi(optarg);
+                break;
+            case 'e':
+                filter_exp = (char*)malloc(sizeof(char)*sizeof(optarg));
+                break;
+            case '?':
+                if(optopt == 'i') {
+                    fprintf (stderr, "Option %c requires an argument. EX. eth0 \n", optopt);
+                    return;
+                }
+                else if(optopt == 'n'){
+                    fprintf(stderr,"Option %c requires an argument. Ex. 15\n",optopt);
+                    return;
+                }
+                else if(optopt =='e'){
+                    fprintf(stderr,"Option %c requires an argument. Ex. \"port 80\"\n",optopt);
+                    return;
+                }
+                else {
+                    fprintf (stderr, "%s\n", help);
+                    return;
+                }
+                break;
+        }
+    }
+
+    //if no flags set print error message
+    if (argc == 1)
+    {
+        fprintf(stderr,help,optopt);
+        return;
+    }
+
+
+
     /*If no device is listed, send an error message*/
     if(dev == NULL){ 
         fprintf(stderr,"Couldn't find default device: %s\n",errbuf);
         return(2);
     }
 
-    /*Print the error message*/
+
+
+    /*Print the device message*/
     printf("Device: %s\n",dev);
    
 
@@ -158,7 +211,7 @@ int main(int argc,char *argv[])
     /*Close the session*/
     pcap_freecode(&fp);
     pcap_close(handle);
-
+    free(filter_exp);
     printf("\nFinished capturing packet\n");
     return 0;
 }
