@@ -3,7 +3,7 @@
 //  
 //
 //  Created by lucas on 2/8/15.
-//
+//  Sourced from this tutorial: http://www.tcpdump.org/pcap.html
 //
 
 #include <stdio.h>
