@@ -70,15 +70,20 @@ int recv_key_tcp(char *server_port)
 
                 addr_size = sizeof client_addr;
                 clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size);
-                bytes_read = read(clientfd, message, sizeof message);
+
+                /* Use a loop to receive couters and reply them */
+                while (1) {
+                        bytes_read = read(clientfd, message, sizeof message);
+                        if(bytes_read < 0) {
+                                perror("ERROR reading socket");
+                        }
+                        if (bytes_read == 0) break;
+                        if (bytes_read == 4) {
+                                get_key = *(int *)message;
+                                printf("Get a key: %d\n", get_key);
+                        }
+                }
                 
-                if(bytes_read < 0) {
-                        perror("ERROR reading socket");
-                }
-                if (bytes_read == 4) {
-                        get_key = *(int *)message;
-                        printf("Get a key: %d\n", get_key);
-                }
 
                 close(clientfd);
         }
