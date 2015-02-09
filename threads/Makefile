@@ -1,5 +1,7 @@
 CC=gcc
 
+all: thread_demo server-tcp client-tcp
+
 thread_demo: thread_demo.c
 	cc -pthread thread_demo.c -o thread_demo
 clean:
