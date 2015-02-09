@@ -22,8 +22,20 @@ struct ht_node{
         unsigned short rebal;           // number of times this node has been rebalanced
 };
 
-/* Define function pointers for reuse later */
+/* Function pointer to calculate hash value for a node
+ *
+ * Parameters: char* that represents the key for the node in the table
+ * Returns: an int that represents the hash value for the node,
+ * however you want to calculate it
+ */
 #define HASH_FUNC int(*hash_func)(char* key)
+
+/* Function pointer to a node comparison function
+ *
+ * Parameters: two ht_node* pointers that point to the nodes being compared
+ * Returns an int depending on how the nodes compare to each other.
+ * Ensure that two equal nodes produce a return value of 0
+ */
 #define NODE_EQUAL int(*node_equal)(struct ht_node* node1, struct ht_node* node2)
 
 struct ht{
