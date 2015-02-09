@@ -154,7 +154,7 @@ ht_lookup(struct ht *table, char* key)
 }
 
 /* Get a list of all the nodes that have a certain key (regardless of value) */
-struct ll*
+struct ht_node*
 ht_lookup_key(struct ht* table, int hash)
 {
         struct ll *list = ht_get_bucket(table, hash);

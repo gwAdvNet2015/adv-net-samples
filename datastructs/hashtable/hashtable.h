@@ -98,7 +98,7 @@ ht_lookup(struct ht* table, char* key);
 /* Lookup a predetermined hash value
  * returns NULL if not found
  */
-struct ll*
+struct ht_node*
 ht_lookup_key(struct ht* table, int hash);
 
 /* Get the bucket that the given hash maps to */
