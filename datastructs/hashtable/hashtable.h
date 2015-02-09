@@ -14,66 +14,82 @@
 #define ENABLE_REBALANCE 1
 #define DISABLE_REBALANCE 0
 
-// Simple table init, do not allow rebalancing
-#define ht_init_simple(size, hash_func, node_equal) ht_init(size, 0, 0, 0, hash_func, node_equal)
-
-// will not be a 1-1 function
-// there may be more than one value for a given key
+/* Only nodes with unique keys are allowed to be added */
 struct ht_node{
-    char *key;
-    void *value;
-    int hash;
-    unsigned short rebal;       // number of times this node has been rebalanced
+        char *key;
+        void *value;
+        int hash;
+        unsigned short rebal;           // number of times this node has been rebalanced
 };
 
-// function pointer definitions
+/* Define function pointers for reuse later */
 #define HASH_FUNC int(*hash_func)(char* key)
 #define NODE_EQUAL int(*node_equal)(struct ht_node* node1, struct ht_node* node2)
 
 struct ht{
-    unsigned short size;        // number of buckets in the list
-    unsigned short used;        // number of buckets in use
-    unsigned short current_max; // current largest bucket size
-    unsigned short max_length;  // max size of a bucket list
-    HASH_FUNC;                  // hash function we use
-    NODE_EQUAL;                 // compare two nodes
-    float fill_pct;             // max percent of bucket fillage
-    struct ll **buckets;
-    unsigned short rebal_count; // number of times the table has been rebalanced
-    unsigned short in_rebalance;// flag for when we're rebalancing
-    unsigned short allow_rebal; // let the table rebalance?
-    unsigned short node_count;  // number of nodes in the table
+        unsigned short size;        // number of buckets in the list
+        unsigned short used;        // number of buckets in use
+        unsigned short current_max; // current largest bucket size
+        unsigned short max_length;  // max size of a bucket list
+        HASH_FUNC;                  // hash function we use
+        NODE_EQUAL;                 // compare two nodes
+        float fill_pct;             // max percent of bucket fillage
+        struct ll **buckets;        // array of linkedlists where data is stored
+        unsigned short rebal_count; // number of times the table has been rebalanced
+        unsigned short in_rebalance;// flag for when we're rebalancing
+        unsigned short allow_rebal; // let the table rebalance?
+        unsigned short node_count;  // number of nodes in the table
 };
 
-// initialize a hash table with the given number of buckets
+/* Initialize a hashtable with all possible option */
 struct ht*
 ht_init(unsigned short size, unsigned short max_length, float fill_pct, unsigned short allow_rebal, HASH_FUNC, NODE_EQUAL);
 
-// create a node (key, value, hash code)
+/* Simple table init, do not allow rebalancing
+ * Overrides the main init function
+ */
+#define ht_init_simple(size, hash_func, node_equal) ht_init(size, 0, 0, 0, hash_func, node_equal)
+
+/* Allocate memory for a node
+ * Will not populate the hash value yet
+ * (That won't get populated until insert time
+ */
 struct ht_node*
 ht_create_node(char* key, void* value);
 
-// put something into the hashtable
+/* Insert a node into the hashtable
+ * This will not rebalance the table - that function
+ * needs to be specifically called
+ */
 void
 ht_insert(struct ht* table, struct ht_node* node);
 
-// check if we need to rebalance the table, accoring to our params
+/* Using the params we set during init, see if the
+ * hashtable needs to be rebalanced
+ */
 unsigned short
 ht_check_rebalance(struct ht* table);
 
-// actually rebalance the table
+/* Rebalances the table
+ * Constructs a new table with twice as many buckets
+ * and adds all the nodes into that one
+ */
 void
 ht_rebalance(struct ht** table);
 
-// lookup a key in the table
+/* Look up a key in the table
+ * returns NULL if not found
+ */
 struct ht_node*
 ht_lookup(struct ht* table, char* key);
 
-// lookup a key
+/* Lookup a predetermined hash value
+ * returns NULL if not found
+ */
 struct ll*
 ht_lookup_key(struct ht* table, int hash);
 
-//  get the bucket associated node data
+/* Get the bucket that the given hash maps to */
 struct ll*
 ht_get_bucket(struct ht* table, int hash);
 
@@ -86,7 +102,7 @@ ht_print_node(struct ll_node* node);
 void
 ht_print_stats(struct ht* table);
 
-// free all memory associated with the hash table
+/* free all memory associated with the hash table */
 void
 ht_free(struct ht* table);
 
