@@ -1,15 +1,18 @@
 CC = gcc
 CFLAGS = 
 DEPS = 
-LDFLAGS = -lpthread
+LDFLAGS =
+OBJS = latency-count
 
 %.o: %.c $(DEPS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $^
 
-all: latency-count
+all: $(OBJS)
+
+rebuild: clean all
 
 latency-count: latency-count.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	@rm latency-count
+	@rm -f $(OBJS)

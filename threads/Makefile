@@ -9,6 +9,8 @@ OBJS = thread_demo server-tcp client-tcp
 
 all: $(OBJS)
 
+rebuild: clean all
+
 thread_demo: thread_demo.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
