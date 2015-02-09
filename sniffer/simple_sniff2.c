@@ -107,6 +107,7 @@ int main(int argc,char *argv[])
     /* The number of packets to be captured*/
     int num_packets = 15;
 
+    int filter_flag = 0;
     int o; /*Arguments */
     char *help = "Unknown Argument:\n"
                  "Arguments:\n "
@@ -126,6 +127,7 @@ int main(int argc,char *argv[])
                 break;
             case 'e':
                 filter_exp = (char*)malloc(sizeof(char)*sizeof(optarg));
+                filter_flag = 1;
                 break;
             case '?':
                 if(optopt == 'i') {
@@ -154,7 +156,10 @@ int main(int argc,char *argv[])
         fprintf(stderr,help,optopt);
         return;
     }
-
+    if(filter_flag == 0)
+    {
+        filter_exp = "";
+    }
 
 
     /*If no device is listed, send an error message*/
@@ -211,7 +216,10 @@ int main(int argc,char *argv[])
     /*Close the session*/
     pcap_freecode(&fp);
     pcap_close(handle);
-    free(filter_exp);
+    if(filter_flag == 1)
+    {
+        free(filter_exp);
+    }
     printf("\nFinished capturing packet\n");
     return 0;
 }
