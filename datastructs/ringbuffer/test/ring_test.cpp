@@ -1,7 +1,7 @@
 
 
-/* ring_test.cpp 
-a test consol to see if ringbuffer's exceptions are working fine 
+/* ring_test.cpp
+a test consol to see if ringbuffer's exceptions are working fine
 with exceeding push and pop options
 */
 #include <stdio.h>
@@ -9,7 +9,7 @@ with exceeding push and pop options
 #include <iostream>
 
 
-#include "ring.h"
+#include "../ring.h"
 
 using namespace std;
 
@@ -60,7 +60,7 @@ void main()
 	//	enter any word and hit enter to close the promp
 	std::cout << "enter any word and hit enter to close the promp" << std::endl ;
 	int end;
-	std::cin >> end ; 
+	std::cin >> end ;
 
 
 }
