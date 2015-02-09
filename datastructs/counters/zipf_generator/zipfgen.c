@@ -117,7 +117,6 @@ int send_key_tcp(struct send_info *info)
 
         while(1) {
                 *(int *)message = get_zipf_key(Alpha, N);
-                printf("%d\n", *(int *)message);
                 
                 /* Send the message, plus the \0 string ending. Use 0 flags. */
                 rc = send(sockfd, message, sizeof(int), 0);
