@@ -132,19 +132,19 @@ int main(int argc,char *argv[])
             case '?':
                 if(optopt == 'i') {
                     fprintf (stderr, "Option %c requires an argument. EX. eth0 \n", optopt);
-                    return;
+                    return 0;
                 }
                 else if(optopt == 'n'){
                     fprintf(stderr,"Option %c requires an argument. Ex. 15\n",optopt);
-                    return;
+                    return 0;
                 }
                 else if(optopt =='e'){
                     fprintf(stderr,"Option %c requires an argument. Ex. \"port 80\"\n",optopt);
-                    return;
+                    return 0;
                 }
                 else {
                     fprintf (stderr, "%s\n", help);
-                    return;
+                    return 0;
                 }
                 break;
         }
@@ -154,7 +154,7 @@ int main(int argc,char *argv[])
     if (argc == 1)
     {
         fprintf(stderr,help,optopt);
-        return;
+        return 0;
     }
     if(filter_flag == 0)
     {
