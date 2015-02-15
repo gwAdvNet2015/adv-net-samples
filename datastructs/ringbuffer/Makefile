@@ -1,7 +1,14 @@
+CC = gcc
+CFLAGS =
+DEPS = ring.c
+OBJ = ringbuffer
+
 all: ringbuffer tests
 
+rebuild: clean all
+
 ringbuffer:
-	gcc -c ring.c -o ringbuffer.o
+	$(CC) -c $(DEPS) -o ringbuffer.o
 tests:
 	cd test && make
 clean:

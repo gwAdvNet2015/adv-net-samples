@@ -1,5 +1,10 @@
+#Objects created by the make file
+OBJS = hashtable linkedlist ringbuffer
+
 #List of dependency files needed for compilation
 all: linkedlist hashtable ringbuffer
+
+rebuild: clean all
 
 hashtable:
 	cd hashtable && make
