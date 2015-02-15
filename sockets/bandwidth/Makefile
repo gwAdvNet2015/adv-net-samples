@@ -1,8 +1,27 @@
+#Use the gcc compiler
+CC = gcc
+CFLAGS = -g
+DEPS = 
+#Threaded execution requires the -lpthread library
+LDFLAGS = -lpthread
+#Objects to be compiled
+OBJS = bandwidth-test multi-bandwidth-test
 
-all: bandwidth-test multi-bandwidth-test
+#Ensure compiling is done with all necessary dependencies
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c -o $@ $^
 
+all: $(OBJS)
+
+rebuild: clean all
+
+#Creates a simple bandwidth test
 bandwidth-test: bandwidth-test.c
-	gcc -g bandwidth-test.c -o bandwidth-test -lpthread
+	$(CC) $(CFLAGS) -o $@ $^
 
+#Creates a multi-threaded bandwidth test
 multi-bandwidth-test: multi-bandwidth-test.c
-	gcc -g multi-bandwidth-test.c -o multi-bandwidth-test -lpthread
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+clean:
+	@rm -f $(OBJS)
