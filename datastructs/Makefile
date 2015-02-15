@@ -1,3 +1,4 @@
+#List of dependency files needed for compilation
 all: linkedlist hashtable ringbuffer
 
 hashtable:
@@ -13,3 +14,8 @@ test:
 	./linkedlist/test/test-list
 	./hashtable/test/test-hashtable
 	./ringbuffer/test/test-ringbuffer
+
+clean:
+	cd linkedlist && make clean
+	cd hashtable && make clean
+	cd ringbuffer && make clean

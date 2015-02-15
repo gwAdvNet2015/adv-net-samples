@@ -1,21 +1,44 @@
+#Use the gcc compiler
+CC = gcc
+CFLAGS = 
+DEPS = 
+LDFLAGS = 
+#Objects created by makefile
+OBJS = server-http web-get server-tcp client-tcp server-udp \
+		client-udp
+
+#Ensure compiling is done with all necessary dependencies
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+all: $(OBJS)
+
+rebuild: clean all
+
+#Builds an http server
 server-http: server-http.c
-	gcc server-http.c -o server-http
+	$(CC) $(CFLAGS) -o $@ $^
 
+#Builds a simple HTTP GET client
 web-get: webget.c
-	gcc webget.c -o webget
+	$(CC) $(CFLAGS) -o $@ $^
 
+#Builds a tcp server
 server-tcp: server-tcp.c
-	gcc server-tcp.c -o server-tcp
+	$(CC) $(CFLAGS) -o $@ $^
 
+#Builds a tcp client
 client-tcp: client-tcp.c
-	gcc client-tcp.c -o client-tcp
+	$(CC) $(CFLAGS) -o $@ $^
 
+#Builds a udp server
 server-udp: server-udp.c
-	gcc server-udp.c -o server-udp
+	$(CC) $(CFLAGS) -o $@ $^
 
+#Builds a udp client
 client-udp: client-udp.c
-	gcc client-udp.c -o client-udp
+	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	@rm server-tcp client-tcp server-udp client-udp
+	@rm -f $(OBJS)
 
