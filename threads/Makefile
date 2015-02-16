@@ -1,7 +1,7 @@
 #Use the gcc compiler
 CC = gcc
 CFLAGS =
-DEPS = 
+DEPS =
 #Threaded execution requires the -lpthread library
 LDFLAGS = -lpthread
 #Objects to be compiled
@@ -25,7 +25,7 @@ server-tcp: server-tcp.c
 
 #Builds a tcp client
 client-tcp: client-tcp.c
-	$(CC) $(CFLAGS) -o $@ $^ 
+	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
 	@rm -f $(OBJS)
