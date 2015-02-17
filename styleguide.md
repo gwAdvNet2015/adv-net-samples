@@ -106,28 +106,28 @@ Please follow the guidelines below when creating makefiles.
 
 **Sample Makefile:**
 ````
-1:	#Use the gcc compiler
-2:	CC = gcc
-3:	CFLAGS = 
-4:	DEPS = 
-5:	LDFLAGS = 
-6:	#Objects created by makefile
-7:	OBJS = test-file
-8:	
-9:	#Ensure compiling is done with all necessary dependencies
-10:	%.o: %.c $(DEPS)
-11:		$(CC) $(CFLAGS) -c -o $@ $<
-12:
-13:	all: $(OBJS)
-14:	
-15:	rebuild: clean all
-16: 
-17:	#Builds test-file
-18:	test-file: test-file.c
-19:		$(CC) $(CFLAGS) -o $@ $^
-20:
-21:	clean:
-22:		@rm -f $(OBJS)
+#Use the gcc compiler
+CC = gcc
+CFLAGS = 
+DEPS = 
+LDFLAGS = 
+#Objects created by makefile
+OBJS = test-file
+
+#Ensure compiling is done with all necessary dependencies
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+all: $(OBJS)
+
+rebuild: clean all
+
+#Builds test-file
+test-file: test-file.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+clean:
+	@rm -f $(OBJS)
 ````
 
 ## Git Usage
