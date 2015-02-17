@@ -40,17 +40,18 @@
 void
 *handle_client(void *arg)
 {
-        int clientfd = *((int*)(&arg)), bytes_read;
+        int clientfd = *((int*)(&arg)), bytes_read = -1;
         char message[256];
 
         printf("Thread %08x\n returning to memory heaven.\n", pthread_self());
-        while(1){
+        while(bytes_read){
                 bytes_read = read(clientfd, message, sizeof message);
                 if(bytes_read < 0) {
                         perror("ERROR reading socket");
                         break;
+                }else if(bytes_read > 0){
+                        printf("[%d] Read: %s\n", pthread_self(), message);
                 }
-                printf("[%d] Read: %s\n", pthread_self(), message);
         }
 
         close(clientfd);

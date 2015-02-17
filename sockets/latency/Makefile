@@ -1,19 +1,21 @@
-default:
-	gcc -o latency-count latency-count.c
+#Use the gcc compiler
+CC = gcc
+CFLAGS = 
+DEPS = 
+LDFLAGS = 
+#Objects created by makefile
+OBJS = latency-count
+
+#Ensure compiling is done with all necessary dependencies
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+all: $(OBJS)
+
+rebuild: clean all
+
+latency-count: latency-count.c
+	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	-rm latency-count
-
-test test_tcp:
-	./latency-count -m server -p 1234 -s tcp &
-	sleep 1
-	./latency-count -m client -h 127.0.0.1 -p 1234 -n 10000 -s tcp
-	sleep 1
-	-killall latency-count
-
-test_udp:
-	./latency-count -m server -p 1234 -s udp &
-	sleep 1
-	./latency-count -m client -h 127.0.0.1 -p 1234 -n 10000 -s udp
-	sleep 1
-	-killall latency-count
+	@rm -f $(OBJS)
