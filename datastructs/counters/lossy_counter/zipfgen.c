@@ -7,8 +7,11 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
+#include <arpa/inet.h>
 #include <time.h>
 #include <math.h>
+
+#include "zipfgen.h"
 
 /****************************************
         Author: Tim Wood
@@ -18,13 +21,6 @@
         with a source of zipf generator
         www.csee.usf.edu/~christen/tools/genzipf.c
 ****************************************/
-
-struct send_info {
-        char *addr;
-        char *port;
-        char *alpha;
-        char *nval;
-};
 
 int get_zipf_key(double alpha, int n) 
 {
@@ -132,59 +128,3 @@ int send_key_tcp(struct send_info *info)
         return 0;
 }
 
-int main(int argc, char ** argv)
-{
-        char* server_port = "1234";
-        char* server_ip = "127.0.0.1";
-        char* zipf_alpha = "1.0";
-        char* zipf_N = "10";
-        int o;
-        struct send_info sinfo;
-
-        srand(time(NULL));
-
-        /* Command line args:
-                -p port
-                -h host name or IP
-                -a zipf alpha value (double)
-                -n zipf n value (int)
-        */
-        while ((o = getopt (argc, argv, "p:h:a:n:")) != -1) {
-                switch(o){
-                case 'p':
-                        server_port = optarg;
-                        break;
-                case 'h':
-                        server_ip = optarg;
-                        break;
-                case 'a':
-                        zipf_alpha = optarg;
-                        break;
-                case 'n':
-                        zipf_N = optarg;
-                        break;
-                case '?':
-                        if(optopt == 'p' || optopt == 'h' || optopt == 'a' || optopt == 'n') {
-                                fprintf (stderr, "Option %c requires an argument.\n", optopt);
-                        }
-                        else {
-                                fprintf (stderr, "Unknown argument: %c.\n", optopt);
-                        }
-                        break;
-                }
-        }
-
-        printf("Zipf generator usage: -p [port] -h [host] -a [alpha] -n [N]\n");
-
-        //send key
-        sinfo.addr = server_ip;
-        sinfo.port = server_port;
-        sinfo.alpha = zipf_alpha;
-        sinfo.nval = zipf_N;
-        if (send_key_tcp(&sinfo) != 0) {
-                perror("ERROR on send key");
-                exit(-1);
-        }
-
-        return 0;
-}
