@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Objects created by the make file
 OBJS = hashtable linkedlist ringbuffer
 
@@ -19,6 +20,9 @@ test:
 	./linkedlist/test/test-list
 	./hashtable/test/test-hashtable
 	./ringbuffer/test/test-ringbuffer
+
+list_test: ll_test.c
+	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
 	cd linkedlist && make clean
