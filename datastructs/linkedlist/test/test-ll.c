@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include "linkedlist.c"
+#include "../linkedlist.h"
 
 void assertEmptyList(struct ll *list);
 void assertListNode(struct ll_node *node, int val);

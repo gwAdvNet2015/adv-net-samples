@@ -1,25 +1,26 @@
-#Use the gcc compiler
-CC = gcc
-CFLAGS = 
+# Mark some tasks phony to ensure proper building
+.PHONY: all clean rebuild test linkedlist hashtable ringbuffer
+
 #List of dependency files needed for compilation
-DEPS = ring_test.h linkedlist.h
-LDFLAGS = 
-#Objects created by the make file
-OBJS = ring_test list_test
-
-#Ensure compiling is done with all necessary dependencies
-%.o: %.c $(DEPS)
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-all: $(OBJS)
+all: linkedlist hashtable ringbuffer
 
 rebuild: clean all
 
-ring_test: ring_test.c
-	$(CC) $(CFLAGS) -o $@ $^
+hashtable:
+	cd hashtable && make
 
-list_test: ll_test.c
-	$(CC) $(CFLAGS) -o $@ $^
+linkedlist:
+	cd linkedlist && make
+
+ringbuffer:
+	cd ringbuffer && make
+
+test:
+	./linkedlist/test/test-list
+	./hashtable/test/test-hashtable
+	./ringbuffer/test/test-ringbuffer
 
 clean:
-	@rm -f $(OBJS)
+	cd linkedlist && make clean
+	cd hashtable && make clean
+	cd ringbuffer && make clean
