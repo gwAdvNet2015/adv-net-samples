@@ -12,5 +12,5 @@ ringbuffer:
 tests:
 	cd test && make
 clean:
-	rm ringbuffer.o
+	rm -f ringbuffer.o
 	cd test && make clean

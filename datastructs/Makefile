@@ -1,5 +1,5 @@
-#Objects created by the make file
-OBJS = hashtable linkedlist ringbuffer
+# Mark some tasks phony to ensure proper building
+.PHONY: all clean rebuild test linkedlist hashtable ringbuffer
 
 #List of dependency files needed for compilation
 all: linkedlist hashtable ringbuffer
@@ -19,9 +19,6 @@ test:
 	./linkedlist/test/test-list
 	./hashtable/test/test-hashtable
 	./ringbuffer/test/test-ringbuffer
-
-list_test: ll_test.c
-	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
 	cd linkedlist && make clean

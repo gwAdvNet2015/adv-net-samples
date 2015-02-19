@@ -8,6 +8,6 @@ all: hashtable_test
 rebuild: clean all
 
 hashtable_test:
-	$(CC) $(CFLAGS) -o $(OBJ) $(DEPS)
+	$(CC) $(CFLAGS) test-hashtable.c -o $(OBJ) $(DEPS)
 clean:
 	rm -f $(OBJ)
