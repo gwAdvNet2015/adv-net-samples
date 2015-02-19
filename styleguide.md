@@ -87,6 +87,49 @@ Here the conditional's body is placed within braces even though it is a single l
 
 **Use 8 spaces to define a tab.** This makes tabs wide, discouraging you from writing code that is deeply nested. It also matches the Linux standard. Learn how to setup your editor to do this for you.
 
+## Makefiles
+Please follow the guidelines below when creating makefiles.
+
+- Include targets for `make all` and `make clean` (`make rebuild` can be useful for enforcing recompilation)
+	* `make all` should compile and create executables for all runnable files
+	* `make clean` should remove all executables created by `make all` and should include the *-f* flag
+- Variables can be defined simply by putting `{Variable_Name} = {Variable_Value}` and are referenced by using `$({Variable_Name})`
+	* EX: `CC = gcc` - this defines our compiler and can be called later by `$(CC)`
+- Each executable file should have a target and compilation method defined in the makefile
+
+**Makefile cheatsheet:**
+
+* target - refers to the name of an action or file to be created
+* `$@` - variable reference to the target
+* `$^` - variable representing all the prerequisites (C files) listed for the given target (no repititions)
+* `$<` - variable representing the first prerequisite of the target
+
+**Sample Makefile:**
+````
+#Use the gcc compiler
+CC = gcc
+CFLAGS = 
+DEPS = 
+LDFLAGS = 
+#Objects created by makefile
+OBJS = test-file
+
+#Ensure compiling is done with all necessary dependencies
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+all: $(OBJS)
+
+rebuild: clean all
+
+#Builds test-file
+test-file: test-file.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+clean:
+	@rm -f $(OBJS)
+````
+
 ## Git Usage
 We use git to track code changes. Learn how to use it.
 
