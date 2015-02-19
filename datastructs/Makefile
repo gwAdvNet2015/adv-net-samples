@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #Objects created by the make file
 OBJS = hashtable linkedlist ringbuffer
 
