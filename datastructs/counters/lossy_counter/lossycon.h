@@ -16,8 +16,6 @@
         94305, USA. 
 ****************************************/
 
-#define BACKLOG 10     // how many pending connections queue will hold
-
 /* for lossy counting */
 typedef struct counter
 {
@@ -43,5 +41,3 @@ void LC_Delete(LC_type *);
 void LC_Update(LC_type *, int);
 int LC_Size(LC_type *, int);
 Counter * LC_Output(LC_type *,int);
-
-int recv_key_tcp(char *server_port, char *lossy_phi);
