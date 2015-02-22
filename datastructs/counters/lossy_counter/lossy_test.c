@@ -68,14 +68,6 @@ void counter_test(char *lossy_phi, char *zipf_N, char *zipf_alpha,
                 perror("invalid input");
                 exit(-1);
         }   
-        if (debug == 1) {
-                printf("Lossy speed tester parameters:\n");
-                printf("        Lossy phi :     %f\n", phi); 
-                printf("        zipf N :        %d\n", N); 
-                printf("        zipf alpha :    %f\n", alpha); 
-                printf("        running time :  %d\n", T); 
-                printf("        output period : %d\n", R); 
-        }
         
         signal(SIGALRM, timeout);
         toset.it_interval.tv_usec = 0;
@@ -98,11 +90,28 @@ void counter_test(char *lossy_phi, char *zipf_N, char *zipf_alpha,
                 }
         }
 
-        printf("        elapsed time:   %d\n", T);
-        printf("        total count:    %lld\n", count);
-        printf("        counts per sec: %f\n", (double)count / T);
+        if (debug == 1) {
+                printf("Lossy speed tester parameters:\n");
+                printf("        Lossy phi :     %f\n", phi); 
+                printf("        zipf N :        %d\n", N); 
+                printf("        zipf alpha :    %f\n", alpha); 
+                printf("        running time :  %d\n", T); 
+                printf("        output period : %d\n", R); 
+                printf("        total count:    %lld\n", count);
+                printf("        counts per sec: "); 
+        }
+        printf("%f\n", (double)count / T);
         
         return;
+}
+
+void show_help(void) {
+        /* Command line args: */
+        printf("Lossy speed tester usage: \n");
+        printf("        -p [lossy phi] -n [zipf N] -a [zipf alpha]\n");
+        printf("        -t [running seconds] -v \"show results\" -r [output period]\n");
+        printf("        -h \"show help\"\n");
+
 }
 
 int main(int argc, char ** argv)
@@ -115,12 +124,7 @@ int main(int argc, char ** argv)
         int debug = 0;
         int o;
 
-        /* Command line args: */
-        printf("Lossy speed tester usage: \n");
-        printf("        -p [lossy phi] -n [zipf N] -a [zipf alpha]\n");
-        printf("        -t [running seconds] -v [show results] -r [output period]\n");
-
-        while ((o = getopt (argc, argv, "p:n:a:t:vr:")) != -1) {
+        while ((o = getopt (argc, argv, "p:n:a:t:vr:h")) != -1) {
                 switch(o){
                 case 'p':
                         phi = optarg;
@@ -140,6 +144,9 @@ int main(int argc, char ** argv)
                 case 'r':
                         outrate = optarg;
                         break;
+                case 'h':
+                        show_help();
+                        return 0;
                 case '?':
                         if(optopt == 'p' || optopt == 'n' || optopt == 'a' 
                                 || optopt == 't' || optopt == 'r') {

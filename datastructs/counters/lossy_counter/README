@@ -1,0 +1,51 @@
+# About
+        Lossy Speed Tester is designed to test the counts per second of lossy counting algorithm
+
+# File
+        There are sample test results
+
+# Environment
+        Mac OS X Yosemite / 2.4G Intel i5 / 4G 1600MHz DDR3
+
+# Results
+        Different parameter combinations are tested, each test case runs for three times
+
+./lossy_test -t 10 -n 1000 -p 0.01 -a 0.5 -r 1
+73307.300000
+71913.800000
+72694.200000
+
+./lossy_test -t 10 -n 1000 -p 0.01 -a 0.5 -r 100
+73937.000000
+73943.500000
+73546.500000
+
+./lossy_test -t 10 -n 1000 -p 0.01 -a 0.5 -r 10000
+74193.000000
+73318.900000
+72149.500000
+
+./lossy_test -t 10 -n 1000 -p 0.01 -a 1.0 -r 1
+179992.000000
+178226.000000
+177462.900000
+
+./lossy_test -t 10 -n 1000 -p 0.01 -a 1.5 -r 1
+818210.000000
+817114.200000
+817331.700000
+
+./lossy_test -t 10 -n 1000 -p 0.01 -a 0.1 -r 1
+53007.400000
+52186.700000
+52486.700000
+
+./lossy_test -t 10 -n 1000 -p 0.05 -a 0.5 -r 1
+72708.800000
+73861.900000
+73043.700000
+
+./lossy_test -t 10 -n 1000 -p 0.1 -a 0.5 -r 1
+73254.100000
+73297.500000
+73985.000000
