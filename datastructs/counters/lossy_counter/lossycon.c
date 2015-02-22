@@ -217,7 +217,7 @@ int LC_Size(LC_type * lc, int num)
         return size;
 }
 
-Counter *  LC_Output(LC_type * lc, int thresh)
+Counter *LC_Output(LC_type * lc, int thresh)
 {
         int i,point;  
 

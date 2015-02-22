@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <math.h>
+#include <sys/time.h>
 
 #include "lossycon.h"
 #include "zipfgen.h"
@@ -27,46 +28,49 @@ void show_result(Counter *result) {
         }   
 }
 
-void counter_test(char *lossy_phi, char *zipf_N, char *zipf_alpha, char *loops, char *outrate) {
+void counter_test(char *lossy_phi, char *zipf_N, char *zipf_alpha, 
+                        char *runs, char *outrate, int debug) {
         LC_type *lcounter;
-        Counter * result;
+        Counter *result = NULL;
         int i, key;
         double alpha, phi;
-        int N, R, L;
+        int N, T, R;
 
         phi = atof(lossy_phi);
         if (phi == 0) {
-                perror("lossy phi value invalid");
+                perror("invalid input");
                 exit(-1);
         }
         lcounter = LC_Init(phi);
         alpha = atof(zipf_alpha);
         N = atoi(zipf_N);
-        if (N == 0) {
-                perror("zipf N value invalid");
+        T = atoi(runs);
+        R = atoi(outrate);
+        if (N == 0 || T == 0 || R == 0) {
+                perror("invalid input");
                 exit(-1);
         }   
-        L = atoi(loops);
-        R = atoi(outrate);
-        if (R == 0) {
-                perror("outrate value invalid");
-                exit(-1);
+        if (debug == 1) {
+                printf("Lossy speed tester parameters:\n");
+                printf("        Lossy phi :     %f\n", phi); 
+                printf("        zipf N :        %d\n", N); 
+                printf("        zipf alpha :    %f\n", alpha); 
+                printf("        running time :  %d\n", T); 
+                printf("        output period : %d\n", R); 
         }
-        printf("        Lossy phi :     %f\n", phi); 
-        printf("        zipf N :        %d\n", N); 
-        printf("        zipf alpha :    %f\n", alpha); 
-        printf("        loops :         %d\n", L); 
-        printf("        output period : %d\n", R); 
 
-        for (i = 0; i < L; i++) {
+        for (i = 0; i < T; i++) {
                 key = get_zipf_key(alpha, N); 
                 LC_Update(lcounter, key);
                 if (i % R == 0) {
+                        if (result != NULL) {
+                                free(result);
+                                result = NULL;
+                        }
                         result = LC_Output(lcounter, 1);
-                        show_result(result);
+                        if (debug == 1) show_result(result);
                 }
         }
-
         return;
 }
 
@@ -75,14 +79,17 @@ int main(int argc, char ** argv)
         char* phi = "0.01";
         char* N = "1000";
         char* alpha = "0.5";
-        char* loops = "10000";
-        char* outrate = "1000";
+        char* runs = "2";
+        char* outrate = "100";
+        int debug = 0;
         int o;
 
         /* Command line args: */
-        printf("Lossy speed tester usage: -p [lossy phi] -n [zipf N] -a [zipf alpha] -l [loops] -r [output period]\n");
+        printf("Lossy speed tester usage: \n");
+        printf("        -p [lossy phi] -n [zipf N] -a [zipf alpha]\n");
+        printf("        -t [running seconds] -v [show results] -r [output period]\n");
 
-        while ((o = getopt (argc, argv, "p:n:a:l:r:")) != -1) {
+        while ((o = getopt (argc, argv, "p:n:a:t:vr:")) != -1) {
                 switch(o){
                 case 'p':
                         phi = optarg;
@@ -93,14 +100,18 @@ int main(int argc, char ** argv)
                 case 'a':
                         alpha = optarg;
                         break;
-                case 'l':
-                        loops = optarg;
+                case 't':
+                        runs = optarg;
+                        break;
+                case 'v':
+                        debug = 1;
                         break;
                 case 'r':
                         outrate = optarg;
                         break;
                 case '?':
-                        if(optopt == 'p' || optopt == 'n' || optopt == 'a' || optopt == 'l') {
+                        if(optopt == 'p' || optopt == 'n' || optopt == 'a' 
+                                || optopt == 't' || optopt == 'r') {
                                 fprintf (stderr, "Option %c requires an argument.\n", optopt);
                         }
                         else {
@@ -110,7 +121,7 @@ int main(int argc, char ** argv)
                 }
         }
 
-        counter_test(phi, N, alpha, loops, outrate); 
+        counter_test(phi, N, alpha, runs, outrate, debug);
 
         return 0;
 }
