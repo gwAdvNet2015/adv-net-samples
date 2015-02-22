@@ -11,8 +11,8 @@ struct timerStruct structList[10];
 struct timerStruct{
   struct timeval begin, end;
   double elapsed_time;
-  int mode;
-  struct double_ll* timeList;
+  int mode, numUsed;
+  long int min, max, sum;
 };
 
 void timer_set_mode(int timer_id, int mode_flag);
@@ -33,40 +33,29 @@ void timer_start(int timer_id){
 
 uint64_t timer_end(int timer_id){
   gettimeofday(structList[timer_id].end, NULL);
+  long int temp;
+  temp = (end.tv_sec - begin.tv_sec)*1000000L + end.tv_usec - begin.tv_usec;
+  if(temp > structList[timer_id].max){ structList[timer_id].max = temp; }
+  if(temp < structList[timer_id].min){ structList[timer_id].min = temp; }
+  structList[timer_id].sum = structList[timer_id].sum + temp;
+  structList[timer_id].numUsed++;
+  return temp;
 }
 
 uint64_t timer_min(int timer_id){
-  double temp = 1000000000;
-  struct Node* move = structList[timer_id].timeList->head;
-  while(move != NULL){
-    if(move->value < temp){ temp = move->value; }
-  }
-  return temp;
+  return structList[timer_id].min;
 }
 
 uint64_t timer_max(int timer_id){
-  double temp = 0;
-  struct Node* move = structList[timer_id].timeList->head;
-  while(move != NULL){
-    if(move->value > temp){ temp = move->value; }
-  }
-  return temp;
+  return structList[timer_id].max;
 }
 
 uint64_t timer_avg(int timer_id){
-  double temp = 0;
-  int length = 0;
-  struct Node* move = structList[timer_id].timeList->head;
-  while(move != NULL){ 
-    temp = temp + move->value;
-    length++;
-  }
-  temp = temp / length;
-  return temp;
+  return (structList[timer_id].sum / structList[timer_id].numUsed);
 }
 
-uint64_t timer_end(int timer_id, struct timeList){
-  //Figure this out.
+uint64_t timer_end(int timer_id, struct histogram* hist ){
+  //Not applicable to the current implementation.
 }
 
 
