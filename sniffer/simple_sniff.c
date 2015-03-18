@@ -80,7 +80,7 @@ int main(int argc,char *argv[])
 {
 
     /*This is the device to sniff on and the error string*/
-    char *dev, errbuf[PCAP_ERRBUF_SIZE];
+    char *dev = NULL, errbuf[PCAP_ERRBUF_SIZE];
 
     /*This the session handler*/
     pcap_t *handle;
@@ -117,7 +117,7 @@ int main(int argc,char *argv[])
     /* Command line args:
      -p port
      */
-    while ((o = getopt (argc, argv, "i:p:e:")) != -1) {
+    while ((o = getopt (argc, argv, "i:n:e:")) != -1) {
         switch(o){
             case 'i':
                 dev = optarg;
@@ -126,8 +126,9 @@ int main(int argc,char *argv[])
                 num_packets = atoi(optarg);
                 break;
             case 'e':
-                filter_exp = (char*)malloc(sizeof(char)*sizeof(optarg));
+                //filter_exp = (char*)malloc(sizeof(char)*sizeof(optarg));
                 filter_flag = 1;
+                filter_exp = optarg;
                 break;
             case '?':
                 if(optopt == 'i') {
@@ -158,7 +159,8 @@ int main(int argc,char *argv[])
     }
     if(filter_flag == 0)
     {
-        filter_exp = "";
+        //filter_exp = optarg;
+        printf("Expression is: %s\n",filter_exp);
     }
 
 
@@ -216,10 +218,10 @@ int main(int argc,char *argv[])
     /*Close the session*/
     pcap_freecode(&fp);
     pcap_close(handle);
-    if(filter_flag == 1)
+    /*if(filter_flag == 0)
     {
         free(filter_exp);
-    }
+    }*/
     printf("\nFinished capturing packet\n");
     return 0;
 }
