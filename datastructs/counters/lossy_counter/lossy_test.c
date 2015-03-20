@@ -45,14 +45,16 @@ void show_result(Counter *result) {
 }
 
 void counter_test(char *lossy_phi, char *zipf_N, char *zipf_alpha, 
-                        char *runs, char *outrate, int debug) {
+                        char *runs, char *outrate, int debug, char *loops) {
         LC_type *lcounter;
         Counter *result = NULL;
         int i, key;
         double alpha, phi;
         int N, T, R;
-        long long count = 0;
+        long long count = 0, L;
         struct itimerval toset, pre;
+        struct timeval tval_start, tval_end;
+        double counttime = 0;
 
         phi = atof(lossy_phi);
         if (phi == 0) {
@@ -62,25 +64,31 @@ void counter_test(char *lossy_phi, char *zipf_N, char *zipf_alpha,
         lcounter = LC_Init(phi);
         alpha = atof(zipf_alpha);
         N = atoi(zipf_N);
-        T = atoi(runs);
         R = atoi(outrate);
-        if (N == 0 || T == 0 || R == 0) {
+        if (N == 0) {
                 perror("invalid input");
                 exit(-1);
         }   
+        T = atoi(runs);
+        L = atoll(loops);
+        if (L > 0) T = 0;
         
-        signal(SIGALRM, timeout);
-        toset.it_interval.tv_usec = 0;
-        toset.it_interval.tv_sec = 0;
-        toset.it_value.tv_usec = 0;
-        toset.it_value.tv_sec = (long int)T;
-        setitimer(ITIMER_REAL, &toset, &pre);
+        if (T > 0) {
+                signal(SIGALRM, timeout);
+                toset.it_interval.tv_usec = 0;
+                toset.it_interval.tv_sec = 0;
+                toset.it_value.tv_usec = 0;
+                toset.it_value.tv_sec = (long int)T;
+                setitimer(ITIMER_REAL, &toset, &pre);
+        }
+
+        gettimeofday(&tval_start, NULL);
 
         while(_running == 1) {
                 count++;
                 key = get_zipf_key(alpha, N); 
                 LC_Update(lcounter, key);
-                if (count % R == 0) {
+                if (R > 0 && count % R == 0) {
                         if (result != NULL) {
                                 free(result);
                                 result = NULL;
@@ -88,19 +96,31 @@ void counter_test(char *lossy_phi, char *zipf_N, char *zipf_alpha,
                         result = LC_Output(lcounter, 1);
                         if (debug == 1) show_result(result);
                 }
+                if (T == 0 && count >= L) break; 
         }
+        if (R == 0 && debug == 1) {
+                if (result != NULL) {
+                        free(result);
+                        result = NULL;
+                }
+                result = LC_Output(lcounter, 1);
+                show_result(result);
+        }
+
+        gettimeofday(&tval_end, NULL);
+        counttime = (tval_end.tv_sec - tval_start.tv_sec) + 0.0000001 * (tval_end.tv_usec - tval_start.tv_usec);
 
         if (debug == 1) {
                 printf("Lossy speed tester parameters:\n");
                 printf("        Lossy phi :     %f\n", phi); 
                 printf("        zipf N :        %d\n", N); 
                 printf("        zipf alpha :    %f\n", alpha); 
-                printf("        running time :  %d\n", T); 
+                printf("        running time :  %f\n", counttime); 
                 printf("        output period : %d\n", R); 
                 printf("        total count:    %lld\n", count);
                 printf("        counts per sec: "); 
         }
-        printf("%f\n", (double)count / T);
+        printf("%f\n", (double)count / counttime);
         
         return;
 }
@@ -121,10 +141,11 @@ int main(int argc, char ** argv)
         char* alpha = "0.5";
         char* runs = "2";
         char* outrate = "100";
+        char* loops = "0";
         int debug = 0;
         int o;
 
-        while ((o = getopt (argc, argv, "p:n:a:t:vr:h")) != -1) {
+        while ((o = getopt (argc, argv, "p:n:a:t:vr:hl:")) != -1) {
                 switch(o){
                 case 'p':
                         phi = optarg;
@@ -147,9 +168,12 @@ int main(int argc, char ** argv)
                 case 'h':
                         show_help();
                         return 0;
+                case 'l':
+                        loops = optarg;
+                        break;
                 case '?':
                         if(optopt == 'p' || optopt == 'n' || optopt == 'a' 
-                                || optopt == 't' || optopt == 'r') {
+                                || optopt == 't' || optopt == 'r' || optopt == 'l') {
                                 fprintf (stderr, "Option %c requires an argument.\n", optopt);
                         }
                         else {
@@ -159,7 +183,7 @@ int main(int argc, char ** argv)
                 }
         }
 
-        counter_test(phi, N, alpha, runs, outrate, debug);
+        counter_test(phi, N, alpha, runs, outrate, debug, loops);
 
         return 0;
 }
