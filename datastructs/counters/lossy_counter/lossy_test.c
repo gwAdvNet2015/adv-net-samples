@@ -128,7 +128,7 @@ void counter_test(char *lossy_phi, char *zipf_N, char *zipf_alpha,
 void show_help(void) {
         /* Command line args: */
         printf("Lossy speed tester usage: \n");
-        printf("        -p [lossy phi] -n [zipf N] -a [zipf alpha]\n");
+        printf("        -l [loops] -p [lossy phi] -n [zipf N] -a [zipf alpha]\n");
         printf("        -t [running seconds] -v \"show results\" -r [output period]\n");
         printf("        -h \"show help\"\n");
 
