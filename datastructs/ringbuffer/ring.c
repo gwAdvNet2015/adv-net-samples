@@ -27,7 +27,7 @@ struct ring* ring_create(int size)
 	rb->push = 0;
 	rb->count = 0;
 
-	rb->items = (void**)malloc(sizeof(void*) );
+	rb->items = (void**)malloc(size * sizeof(void*) );
 
 	if (rb->items == NULL) {
 		printf("Does not have enough memory for creating item.\n");
