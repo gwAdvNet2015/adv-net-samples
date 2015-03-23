@@ -39,7 +39,7 @@ int main(int argc, char ** argv)
 		   requesting www.cs.gwu.edu/research, the message would be
 		   research.)
         */
-        while ((o = getopt (argc, argv, "p:h:m:i:")) != -1) {
+        while ((o = getopt (argc, argv, "p:h:f:i:")) != -1) {
                 switch(o){
                 case 'p':
                         server_port = optarg;
@@ -47,7 +47,7 @@ int main(int argc, char ** argv)
                 case 'h':
                         server_ip = optarg;
                         break;
-                case 'm':
+                case 'f':
                         message = optarg;
                         break;
                 case '?':
@@ -60,11 +60,15 @@ int main(int argc, char ** argv)
                         break;
                 }
         }
-	
+	/*if (message[0] == '/'){
+		strmcpy(message, message[1], message[sizeof(message)]);
+	}*/	
 	//mallocs memory that will be used for http request.
 	http_format_req = (char*)malloc(sizeof(char*)*(strlen("GET / HTTP/1.1\n\n") + strlen(message)));
 	//formats the http request
-	sprintf(http_format_req, "GET / HTTP/1.0\n\n");
+	sprintf(http_format_req, "GET ");
+	sprintf(http_format_req + strlen(http_format_req), message);
+	sprintf(http_format_req + strlen(http_format_req), " HTTP/1.0\n\n");
 	printf("%s\n", http_format_req);
 	/* The hints struct is used to specify what kind of server info we are looking for */
 	memset(&hints, 0, sizeof hints);

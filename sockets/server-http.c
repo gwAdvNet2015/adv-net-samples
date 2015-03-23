@@ -37,14 +37,22 @@ typedef struct http_response {
 http_response *http_response_alloc()
 {
     http_response* response = malloc(sizeof(struct http_response));
-    response->version = "HTTP/1.1";
-    response->host = "host.name";
-    printf("response object created\n");
+    response->version = (char*)malloc(sizeof(char)*9);
+    strcpy(response->version,"HTTP/1.1");
+    response->host = (char*)malloc(sizeof(char)*10);
+    strcpy(response->host,"host.name");
+    response->content_type = (char*)malloc(sizeof(char)*3);
+    strcpy(response->content_type, " ");
     return response;
 }
 
 void http_response_free(http_response * response)
 {
+    free(response->version);
+    free(response->response_code);
+    free(response->host);
+    free(response->content_type);
+    free(response->body);
     free(response);
 }
 
@@ -137,22 +145,28 @@ int main(int argc, char ** argv)
         http_request *req = malloc(sizeof(struct http_request));
         /* Break up the request message into space delimited segments */
         requestmsgseg = strtok(message, " ");
-        req->method = strdup(requestmsgseg);
+        req->method = (char*)malloc(sizeof(requestmsgseg));
+        strcpy(req->method,requestmsgseg);
         
         /*This is necessary to prevent not get requests from segfaulting server. #Lucas*/
         if(strcmp(req->method,"GET")!=0)
         {
             //printf("Not a get request");
             close(clientfd);
+            free(req->method);
+            //free(req->request);
+            //free(req->version);
             free(req);
             continue;
         }
         
         
         requestmsgseg = strtok(NULL, " ");
-        req->request = strdup(requestmsgseg);
+        req->request = (char*)malloc(sizeof(requestmsgseg));
+        strcpy(req->request,requestmsgseg);
         requestmsgseg = strtok(NULL, " ");
-        req->version = strdup(requestmsgseg);
+        req->version = (char*)malloc(sizeof(requestmsgseg));
+        strcpy(req->version,requestmsgseg);
         /*Check for get request*/
         
         /* Test the request was recorded correctly */
@@ -167,13 +181,14 @@ int main(int argc, char ** argv)
             
             /* create the response object to contain response information */
             http_response* response = http_response_alloc();
-            response->response_code = "200";
+            response->response_code = (char*)malloc(sizeof(char)*3);
+            strcpy(response->response_code,"200");
             
             /* open the file requested and move the information into the response object */
             fp = fopen(req->request, "r");
             stat(req->request, &st);
             size = st.st_size; // need to know the size of the object we are manipulating
-            response->body = malloc(size);
+            response->body = (char*)malloc(size);
             file_size = fread(response->body, 1, size, fp); //moves contents into response->body
             response->len = file_size;
             
@@ -183,15 +198,19 @@ int main(int argc, char ** argv)
                 perror("ERROR on send");
                 exit(-1);
             }
-            free(response);
+            
+            //free(req->request);
+            http_response_free(response);
             
             /* File does not exist, return 404 */
         } else {
             //file does not exist return 404
             printf("File does not exist\n");
             http_response * response = http_response_alloc();
-            response->response_code = "404";
-            response->body = "<html><head></head><body><h1 style='max-width:600px;margin:auto;margin-top:25px'>ERROR 404: File Not Found</h1></body></html>";
+            response->response_code = (char*)malloc(sizeof(char)*3);
+            strcpy(response->response_code,"404");
+            response->body = (char*)malloc(sizeof(char)*125);
+            strcpy(response->body,"<html><head></head><body><h1 style='max-width:600px;margin:auto;margin-top:25px'>ERROR 404: File Not Found</h1></body></html>");
             response->len = strlen(response->body);
             
             asprintf(&response_message, "%s %s\nHost: %s\nContent-Type: %s\nContent-Length: %d\n\n%s", response->version, response->response_code, response->host, response->content_type, response->len, response->body);
@@ -200,10 +219,15 @@ int main(int argc, char ** argv)
                 perror("ERROR on send");
                 exit(-1);
             }
-            free(response);
+            http_response_free(response);
+
         }
         
         close(clientfd);
+        free(req->method);
+        req->request--;
+        free(req->request);
+        free(req->version);
         free (req);
     }
     
