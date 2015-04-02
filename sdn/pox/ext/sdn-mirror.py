@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+Traffic mirroring switch
+Mirrors traffic from a given IP to a different port
+"""
+
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
 from pox.openflow import *
@@ -22,11 +27,19 @@ class TrafficMirrorSwitch(SimpleL2LearningSwitch):
         self.packet = event.parsed
         self.event = event
         self.macLearningHandle()
+
+        # get the desired dst port (flood, if needed)
         out_port = self.get_out_port()
         ports = [out_port]
+
+        # get the source ip address (if it exists)
         ip = self.packet.find('ipv4')
         if ip and ip.srcip == self._src_ip:
+                # if the packet is from our watched IP,
+                # also send it to the mirror port
                 ports.append(self._dst_port)
+
+        # send the packet out to everything in ports list
         self.forward_packet(ports)
 
 
@@ -40,6 +53,7 @@ class MirrorTraffic(object):
         TrafficMirrorSwitch(event.connection, self._duplicate_port)
 
 
+# use 'src_ip' and 'dst_port' as command line params
 def launch(src_ip="10.1.1.1", dst_port="eth4"):
     log.debug("TrafficMirror : {} -> {}".format(src_ip, dst_port))
     core.registerNew(MirrorTraffic, src_ip, dst_port)
