@@ -9,7 +9,7 @@ from pox.core import core
 import pox.openflow.libopenflow_01 as of
 from pox.openflow import *
 from utils import *
-from SimpleL2Learning import SimpleL2LearningSwitch
+from BBN_SimpleL2Learning import SimpleL2LearningSwitch
 
 log = core.getLogger()  # Use central logging service
 
