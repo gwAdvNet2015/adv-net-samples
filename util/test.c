@@ -9,11 +9,11 @@ int main(){
 	timer_util* tu = malloc(sizeof(timer_util));
 	int i, j, k;
 	initialize_timer(tu);
-	for(i = 0; i < 10; i++){
+	for(i = 0; i < NUM_TIMER; i++){
 		timer_set_mode(tu, i, 1);
 	}
 	for(i = 0; i < 100; i++){
-		for(j = 0; j < 10; j++){
+		for(j = 0; j < NUM_TIMER; j++){
 			timer_start(tu, j);
 			for(k = 0; k < 1000000; k++){}
 			timer_end(tu, j);

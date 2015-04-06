@@ -5,6 +5,7 @@
 
 #define TIMER_CYCLES
 #define TIMER_USEC
+#define NUM_TIMER 10
 
 struct timerStruct{
 	struct timeval begin, end;
@@ -14,7 +15,7 @@ struct timerStruct{
 };
 
 typedef struct timer_util{
-	struct timerStruct structList[10];
+	struct timerStruct structList[NUM_TIMER];
 } timer_util;
 
 void timer_set_mode(timer_util *tu, int timer_id, int mode_flag);
@@ -27,7 +28,7 @@ uint64_t timer_avg(timer_util *tu, int timer_id);
 
 void initialize_timer(timer_util *tu){
 	int i = 0;
-	for(i = 0; i < 10; i++){
+	for(i = 0; i < NUM_TIMER; i++){
 		tu->structList[i].elapsed_time = 0;
 		tu->structList[i].mode = 0;
 		tu->structList[i].numUsed = 0;
@@ -36,13 +37,6 @@ void initialize_timer(timer_util *tu){
 		tu->structList[i].sum = 0;
 		gettimeofday(&tu->structList[i].begin, NULL);
 		gettimeofday(&tu->structList[i].end, NULL);
-	}
-}
-
-void test_for_loop(timer_util *tu){
-	int i = 0;
-	for(i = 0; i < 10; i++){
-		tu->structList[i].mode = i;
 	}
 }
 
