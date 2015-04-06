@@ -1,64 +1,84 @@
 #include <stdint.h>
 #include <sys/time.h>
-#include <list.h>
-
-
-struct timerStruct structList[10];
+#include <stdlib.h>
+#include <stdio.h>
 
 #define TIMER_CYCLES
 #define TIMER_USEC
 
 struct timerStruct{
-  struct timeval begin, end;
-  double elapsed_time;
-  int mode, numUsed;
-  long int min, max, sum;
+	struct timeval begin, end;
+	double elapsed_time;
+	unsigned int mode, numUsed;
+	long int min, max, sum;
 };
 
-void timer_set_mode(int timer_id, int mode_flag);
-void timer_start(int timer_id);
-uint64_t timer_end(int timer_id);
-uint64_t timer_min(int timer_id);
-uint64_t timer_max(int timer_id);
-uint64_t timer_avg(int timer_id);
-uint64_t timer_end(int timer_id, struct list);
+typedef struct timer_util{
+	struct timerStruct structList[10];
+} timer_util;
 
-void timer_set_mode(int timer_id, int mode_flag){
-  structList[timer_id].mode = mode_flag;
+void timer_set_mode(timer_util *tu, int timer_id, int mode_flag);
+void timer_start(timer_util *tu, int timer_id);
+uint64_t timer_end(timer_util *tu, int timer_id);
+uint64_t timer_min(timer_util *tu, int timer_id);
+uint64_t timer_max(timer_util *tu, int timer_id);
+uint64_t timer_avg(timer_util *tu, int timer_id);
+//uint64_t timer_end(int timer_id, struct list);
+
+void initialize_timer(timer_util *tu){
+	int i = 0;
+	for(i = 0; i < 10; i++){
+		tu->structList[i].elapsed_time = 0;
+		tu->structList[i].mode = 0;
+		tu->structList[i].numUsed = 0;
+		tu->structList[i].min = 100000000;
+		tu->structList[i].max = 0;
+		tu->structList[i].sum = 0;
+		gettimeofday(&tu->structList[i].begin, NULL);
+		gettimeofday(&tu->structList[i].end, NULL);
+	}
 }
 
-void timer_start(int timer_id){
-  gettimeofday(structList[timer_id].begin, NULL);
+void test_for_loop(timer_util *tu){
+	int i = 0;
+	for(i = 0; i < 10; i++){
+		tu->structList[i].mode = i;
+	}
 }
 
-uint64_t timer_end(int timer_id){
-  gettimeofday(structList[timer_id].end, NULL);
-  long int temp;
-  temp = (end.tv_sec - begin.tv_sec)*1000000L + end.tv_usec - begin.tv_usec;
-  if(temp > structList[timer_id].max){ structList[timer_id].max = temp; }
-  if(temp < structList[timer_id].min){ structList[timer_id].min = temp; }
-  structList[timer_id].sum = structList[timer_id].sum + temp;
-  structList[timer_id].numUsed++;
-  return temp;
+void timer_set_mode(timer_util *tu, int timer_id, int mode_flag){
+	tu->structList[timer_id].mode = mode_flag;
 }
 
-uint64_t timer_min(int timer_id){
-  return structList[timer_id].min;
+void timer_start(timer_util *tu, int timer_id){
+	gettimeofday(&tu->structList[timer_id].begin, NULL);
+	tu->structList[timer_id].numUsed = tu->structList[timer_id].numUsed + 1;
 }
 
-uint64_t timer_max(int timer_id){
-  return structList[timer_id].max;
+uint64_t timer_end(timer_util *tu, int timer_id){
+	gettimeofday(&tu->structList[timer_id].end, NULL);
+	long int temp;
+	temp = (tu->structList[timer_id].end.tv_sec - tu->structList[timer_id].begin.tv_sec)*1000000L + tu->structList[timer_id].end.tv_usec - tu->structList[timer_id].begin.tv_usec;
+	if(temp > tu->structList[timer_id].max){ tu->structList[timer_id].max = temp; }
+	if(temp < tu->structList[timer_id].min){ tu->structList[timer_id].min = temp; }
+	tu->structList[timer_id].sum = tu->structList[timer_id].sum + temp;	
+	return temp;
 }
 
-uint64_t timer_avg(int timer_id){
-  return (structList[timer_id].sum / structList[timer_id].numUsed);
+uint64_t timer_min(timer_util *tu, int timer_id){
+	return tu->structList[timer_id].min;
 }
 
-uint64_t timer_end(int timer_id, struct histogram* hist ){
-  //Not applicable to the current implementation.
+uint64_t timer_max(timer_util *tu, int timer_id){
+	return tu->structList[timer_id].max;
 }
 
+uint64_t timer_avg(timer_util *tu, int timer_id){
+	return (tu->structList[timer_id].sum / (tu->structList[timer_id].numUsed));
+}
 
-
-
-
+/*
+   uint64_t timer_end(int timer_id, struct histogram* hist ){
+//Not applicable to the current implementation.
+}
+ */
