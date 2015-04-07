@@ -30,7 +30,7 @@ import time
 import threading
 import pdb
 from utils import *
-from SimpleL2Learning import SimpleL2LearningSwitch
+from BBN_SimpleL2Learning import SimpleL2LearningSwitch
 from pox.lib.packet.ethernet import ethernet
 from pox.lib.packet.vlan import vlan
 from pox.lib.packet.ipv4 import ipv4
