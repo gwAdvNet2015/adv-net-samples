@@ -30,7 +30,7 @@ import time
 import threading
 import pdb
 from utils import *
-from SimpleL2Learning import SimpleL2LearningSwitch
+from BBN_SimpleL2Learning import SimpleL2LearningSwitch
 from pox.lib.packet.ethernet import ethernet
 from pox.lib.packet.vlan import vlan
 from pox.lib.packet.ipv4 import ipv4
@@ -50,9 +50,8 @@ class PortForwardingSwitch(SimpleL2LearningSwitch):
         SimpleL2LearningSwitch.__init__(self, connection, False)
         self._connection = connection;
         self._serverip = config['server_ip']
-        self._serverport = int(config['server_port'])
-        self._proxyip = config['proxy_ip']
-        self._proxyport = int(config['proxy_port'])
+        self._origport = int(config['orig_port'])
+        self._forwport = int(config['forw_port'])
 
     def _handle_PacketIn(self, event):
         log.debug("Got a packet : " + str(event.parsed))
@@ -60,60 +59,40 @@ class PortForwardingSwitch(SimpleL2LearningSwitch):
         self.event = event
         self.macLearningHandle()
 
-        if packetIsARP(self.packet, log) :
-          self._handle_PacketInARP(event)
-          return
-
         if packetIsTCP(self.packet, log) :
           self._handle_PacketInTCP(event)
           return
         SimpleL2LearningSwitch._handle_PacketIn(self, event)
 
-    def _handle_PacketInARP(self, event) :
-        inport = event.port
-        arppkt = None
-
-        # If this an ARP Packet srcd at the server, 
-        # Then we drop it not to confuse the MAC learning
-        # At the hosts
-        if packetArpSrcIp(self.packet, self._serverip, log):
-           log.info("DROP ARP Packet From Server!")
-           return
-
-        # XXX If this is an ARP Request for the server iP
-        # create new ARP request and save it in arppkt
-
-        # XXX If this is an ARP Reply from the proxy
-        # create new ARP reply  and save it in arppkt
-
-        # If we haven't created a new arp packet, send the one we 
-        # received
-        if arppkt is None :
-          SimpleL2LearningSwitch._handle_PacketIn(self, event)
-          return
-
-        # Send a packet out with the ARP
-        msg = of.ofp_packet_out() 
-        msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
-        msg.data = arppkt.pack() 
-        msg.in_port = inport
-        self.connection.send(msg)
-            
-
     def _handle_PacketInTCP(self, event) :
         inport = event.port
         actions = []
         out_port = self.get_out_port()
-        
-        # XXX If packet is destined to serverip:server port
-        # make the appropriate rewrite
 
-        # XXX If packet is sourced at proxyip:proxy port
+        # XXX If packet is destined to serverip:original port
         # make the appropriate rewrite
+        if packetDstIp(self.packet, self._serverip, log ): 
+          if packetDstTCPPort(self.packet, self._origport, log) :
+            log.debug("Packet is TCP destined to %s:%d" % (self._serverip, self._origport))
+            newaction = createOFAction(of.OFPAT_SET_TP_DST, self._forwport, log)
+            actions.append(newaction)
 
+        # XXX If packet is sourced at serverip:forward port
+        # make the appropriate rewrite
+        if packetSrcIp(self.packet, self._serverip, log ): 
+          if packetSrcTCPPort(self.packet, self._forwport, log) :
+            log.debug("Packet is TCP sourced at %s:%d" % (self._serverip, self._forwport))
+            newaction = createOFAction(of.OFPAT_SET_TP_SRC, self._origport, log)
+            actions.append(newaction)
+              
         # XXX Create the flow mod message in a variable
         # called msg
-
+        newaction = createOFAction(of.OFPAT_OUTPUT, out_port, log)
+        actions.append(newaction)
+        
+        match = getFullMatch(self.packet, inport)
+        msg = createFlowMod(match, actions, FLOW_HARD_TIMEOUT, 
+                                  FLOW_IDLE_TIMEOUT, event.ofp.buffer_id)
         event.connection.send(msg.pack())
         		
 class PortForwarding(object):
@@ -126,7 +105,7 @@ class PortForwarding(object):
         PortForwardingSwitch(event.connection, self._config)
 
 
-def launch(config_file=os.path.join(SCRIPT_PATH, "proxy.config")):
+def launch(config_file=os.path.join(SCRIPT_PATH, "port_forward.config")):
     log.debug("PortForwarding " + config_file);
     config = readConfigFile(config_file, log)
     core.registerNew(PortForwarding, config["general"])

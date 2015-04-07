@@ -27,7 +27,7 @@ from pox.core import core
 import pox.openflow.libopenflow_01 as of
 from pox.openflow import *
 from utils import *
-from SimpleL2Learning import SimpleL2LearningSwitch
+from BBN_SimpleL2Learning import SimpleL2LearningSwitch
 
 log = core.getLogger() # Use central logging service
 
@@ -36,7 +36,7 @@ class DuplicateTrafficSwitch(SimpleL2LearningSwitch):
     def __init__(self, connection, duplicate_port):
         SimpleL2LearningSwitch.__init__(self, connection, False)
         self._connection = connection;
-        self._duplicate_port=duplicate_port 
+        self._duplicate_port=duplicate_port
         self._of_duplicate_port=getOpenFlowPort(connection, duplicate_port)
 
     def _handle_PacketIn(self, event):

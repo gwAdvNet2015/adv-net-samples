@@ -24,43 +24,74 @@
 #----------------------------------------------------------------------
 
 from pox.core import core
-import pox.openflow.libopenflow_01 as of
 from pox.openflow import *
+import string
+import time
+import threading
+import pdb
 from utils import *
-from SimpleL2Learning import SimpleL2LearningSwitch
+from BBN_SimpleL2Learning import SimpleL2LearningSwitch
+from pox.lib.packet.ethernet import ethernet
+from pox.lib.packet.vlan import vlan
+from pox.lib.packet.ipv4 import ipv4
+from pox.lib.packet.arp import arp
+from pox.lib.packet.tcp import tcp
 
 log = core.getLogger() # Use central logging service
 
-class DuplicateTrafficSwitch(SimpleL2LearningSwitch):
+SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 
-    def __init__(self, connection, duplicate_port):
+FLOW_HARD_TIMEOUT = 30
+FLOW_IDLE_TIMEOUT = 10
+
+class PortForwardingSwitch(SimpleL2LearningSwitch):
+
+    def __init__(self, connection, config):
         SimpleL2LearningSwitch.__init__(self, connection, False)
         self._connection = connection;
-        self._duplicate_port=duplicate_port 
-        self._of_duplicate_port=getOpenFlowPort(connection, duplicate_port)
+        self._serverip = config['server_ip']
+        self._origport = int(config['orig_port'])
+        self._forwport = int(config['forw_port'])
 
     def _handle_PacketIn(self, event):
         log.debug("Got a packet : " + str(event.parsed))
         self.packet = event.parsed
         self.event = event
         self.macLearningHandle()
+
+        if packetIsTCP(self.packet, log) :
+          self._handle_PacketInTCP(event)
+          return
+        SimpleL2LearningSwitch._handle_PacketIn(self, event)
+
+    def _handle_PacketInTCP(self, event) :
+        inport = event.port
+        actions = []
         out_port = self.get_out_port()
-        # XXX Modify the following line to forward packets
-        # out the normal port and the duplication port
-        self.forward_packet([out_port])
 
+        # XXX If packet is destined to serverip:original port
+        # make the appropriate rewrite
 
-class DuplicateTraffic(object):
-    def __init__(self, duplicate_port):
+        # XXX If packet is sourced at serverip:forward port
+        # make the appropriate rewrite
+
+        # XXX Create the flow mod message in a variable
+        # called msg
+
+        event.connection.send(msg.pack())
+        		
+class PortForwarding(object):
+    def __init__(self, config):
         core.openflow.addListeners(self)
-        self._duplicate_port= duplicate_port
+        self._config=config 
 
     def _handle_ConnectionUp(self, event):
         log.debug("Connection %s" % (event.connection,))
-        DuplicateTrafficSwitch(event.connection, self._duplicate_port)
+        PortForwardingSwitch(event.connection, self._config)
 
 
-def launch(duplicate_port="eth4"):
-    log.debug("DuplicateTraffic" + duplicate_port);
-    core.registerNew(DuplicateTraffic, duplicate_port)
+def launch(config_file=os.path.join(SCRIPT_PATH, "port_forward.config")):
+    log.debug("PortForwarding " + config_file);
+    config = readConfigFile(config_file, log)
+    core.registerNew(PortForwarding, config["general"])
 
