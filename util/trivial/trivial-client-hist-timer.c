@@ -84,7 +84,7 @@ int main(int argc, char ** argv)
 
         out:
         close(sockfd);
-        histogram_free(hist);
+        //histogram_free(hist);
         printf("Done.\n");
         return 0;
 }

@@ -43,7 +43,7 @@ void histogram_inc(struct histogram* hist, int data_point)
                 hist->buckets[i - 1]++;
         }
         else if( i > hist->num_buckets){
-                hist->missed_counter++;
+                hist->buckets[hist->num_buckets-1]++;
         }
         else{
                 hist->buckets[i]++;
@@ -76,7 +76,6 @@ void histogram_print(struct histogram* hist)
                         value += hist->bucket_size;
                 }
         }
-        printf("\tNumber of values too great for the range of buckets: %d\n", hist->missed_counter);
 }
 
 /* Frees the histogram from memory
