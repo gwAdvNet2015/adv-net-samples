@@ -4,7 +4,7 @@ CFLAGS= -I. -w
 DEPS = timer_util.h
 CC = gcc
 BIN = test 
-	
+
 all:
 	make test.o
 	$(CC) $(CFLAGS) $(OBJS) -o $(BIN) -lm
@@ -15,4 +15,4 @@ all:
 clean:
 	rm $(OBJS)
 	rm $(BIN)
-	
+					
